@@ -1,0 +1,4 @@
+*.py[a-z]
+*.sqlite3
+
+admin/
