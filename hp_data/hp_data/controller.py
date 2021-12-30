@@ -7,3 +7,4 @@ class DataController:
 
     def _parse_fields():
         """Will parse any selectors out of the fields"""
+
