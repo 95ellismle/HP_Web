@@ -8,7 +8,7 @@ class Filter(models.Model):
     street = models.CharField(max_length=70)
     city = models.CharField(max_length=70)
     county = models.CharField(max_length=40)
-    is_new = models.CharField(max_length=10)
+    is_new = models.CharField(max_length=14)
     dwelling_type = models.CharField(max_length=50)
     tenure = models.CharField(max_length=20)
     price_low = models.IntegerField()
