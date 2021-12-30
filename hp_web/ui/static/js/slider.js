@@ -52,7 +52,6 @@ function slideTwo(){
     if(parseInt(sliderTwo.value) - parseInt(sliderOne.value) <= minGap){
         sliderTwo.value = parseInt(sliderOne.value) + minGap;
     }
-	console.log(sliderTwo.value);
 	// Display Value
 	const val = sliderTwo.value;
 	sliderTwoVal.innerHTML = createDisplayVal(val);
