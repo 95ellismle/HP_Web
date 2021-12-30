@@ -14,31 +14,20 @@
 
 		<!-- Own CSS -->
 		<link rel="stylesheet" href="{% static 'css/ui.css' %}">
+		<link rel="stylesheet" href="{% static 'css/slider.css' %}">
     </head>
     
 	<body>
-		<!-- Sidebar -->
-		<div class="w3-sidebar w3-dark-grey w3-bar-block">
-		    <h3 class="w3-bar-item">Data Filters</h3>
-			<label class="w3-bar-item"><i class="fa fa-caret-down"></i>Postcode: {{postcode}}</label>
-			<input class="w3-bar-item w3-input" type="text" style="margin-left: 15px; width: calc(100% - 30px)">
-
-		</div>
-		<!--<div style="margin-left:25%">-->
-
-		<!-- Main Body -->
-		<div class="w3-container">
-			<div class="w3-content">
-				{% block content %}
-				{% endblock %}
-			</div>
-		</div>
+		{% block content %}
+		{% endblock %}
 	</body>
 
 	<footer>
 		<div class="w3-content">
 			Contains HM Land Registry data © Crown copyright and database right 2021. This data is licensed under the Open Government Licence v3.0.
 		</div>
+
+		<script src="{% static 'js/slider.js' %}"></script>
 	</footer>
 </html>
 

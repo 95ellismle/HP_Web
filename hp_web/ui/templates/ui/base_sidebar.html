@@ -1,0 +1,75 @@
+{% extends 'ui/base.html' %}
+
+{% block content %}
+	<!-- Sidebar -->
+	<div class="w3-sidebar w3-black w3-bar-block">
+		<form method="POST" class="post-form">{% csrf_token %}
+			<!-- Postcode -->
+			<label class="w3-bar-item"><b>Postcode</b></label>
+			<input class="w3-bar-item w3-input mtext-field" type="text">
+
+			<!-- City -->
+			<label class="w3-bar-item"><b>City</b></label>
+			<input class="w3-bar-item w3-input mtext-field" type="text">
+
+			<!-- County -->
+			<label class="w3-bar-item"><b>County</b></label>
+			<input class="w3-bar-item w3-input mtext-field" type="text">
+
+			<!-- Street -->
+			<label class="w3-bar-item"><b>Street</b></label>
+			<input class="w3-bar-item w3-input mtext-field" type="text">
+			
+			<!-- Price -->
+			<label class="w3-bar-item"><b>Price Range</b></label>
+            <div class="slider-track"></div>
+            <input type="range" min="0" max="100" value="0" id="slider-1" oninput="slideOne()">
+            <input type="range" min="0" max="100" value="100" id="slider-2" oninput="slideTwo()">
+			<div class="w3-bar-item">
+				<span style="float: left; color: #ef5040;"><b id="slider-val-1">1000</b></span> 
+				<span style="float:right; color: #50bf40;"><b id="slider-val-2">5000</b></span>
+			</div>
+			<br>
+
+			<!-- Dates -->
+			<label class="w3-bar-item"><b>From</b></label>
+			<input class="mtext-field w3-input" type="date" default="01/01/1995">
+			<label class="w3-bar-item"><b>To</b></label>
+			<input class="mtext-field w3-input" type="date">
+
+			<!-- Is New Build? -->
+			<label class="w3-bar-item"><b>New Build</b></label>
+			<input class="w3-radio" type="radio" name="is_new" value="female" style="margin-left: 15px">
+			<label>Yes</label>
+			<input class="w3-radio" type="radio" name="is_new" value="no" checked>
+			<label>No</label>
+
+			<!-- Dwelling Type -->
+			<label class="w3-bar-item" style="margin-top: 6px"><b>Dwelling Type</b></label>
+			<input class="w3-check" type="checkbox" checked style="margin-left: 15px;">
+			<label>Detatched</label>
+			<br>
+			<input class="w3-check" type="checkbox" checked style="margin-left: 15px">
+			<label>Semi-detached</label>
+			<br>
+			<input class="w3-check" type="checkbox" checked style="margin-left: 15px">
+			<label>Flat/Maisonette</label>
+			<br>
+			<input class="w3-check" type="checkbox" checked style="margin-left: 15px">
+			<label>Terraced</label>
+			<br>
+			<input class="w3-check" type="checkbox" style="margin-left: 15px">
+			<label>Other</label>
+		</form>
+	</div>
+
+	<!-- Main Body -->
+	<div class="w3-container">
+		<div class="w3-content">
+			{% block main_content %}
+			{% endblock %}
+		</div>
+	</div>
+
+{% endblock %}
+

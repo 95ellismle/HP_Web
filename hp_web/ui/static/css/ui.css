@@ -1,0 +1,4 @@
+.mtext-field {
+	width: calc(100% - 30px) !important;
+	margin-left: 15px !important;
+}
