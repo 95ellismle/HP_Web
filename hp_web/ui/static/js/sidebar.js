@@ -11,7 +11,7 @@ function populate_fields(field_data) {
 	}
 
 	// Set the checkboxes
-	const check_names = ['is_name', 'dwelling_type', 'tenure'];
+	const check_names = ['is_new', 'dwelling_type', 'tenure'];
 	for (i in check_names) {
 		const check_name = check_names[i];
 		if (form_data[check_name] || form_data[check_name] == '') {
@@ -19,6 +19,9 @@ function populate_fields(field_data) {
 			set_form_check_value(check_name);  // To ensure we don't revert to default next time
 		}
 	}
+
+	// Set the price range
+
 }
 
 /*

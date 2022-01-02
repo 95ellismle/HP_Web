@@ -5,6 +5,6 @@ class DataController:
 
         self._parse_fields()
 
-    def _parse_fields():
+    def _parse_fields(self):
         """Will parse any selectors out of the fields"""
 

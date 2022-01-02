@@ -15,6 +15,7 @@
 		<!-- Own CSS -->
 		<link rel="stylesheet" href="{% static 'css/ui.css' %}">
 		<link rel="stylesheet" href="{% static 'css/slider.css' %}">
+
     </head>
     
 	<body>
@@ -26,8 +27,11 @@
 		<div class="w3-content">
 			Contains HM Land Registry data © Crown copyright and database right 2021. This data is licensed under the Open Government Licence v3.0.
 		</div>
+		<script type='text/javascript' src="{% static 'js/slider.js' %}"></script>
+		<script>
+			setSlidersFromForm(form_data);
+		</script>
 
-		<script src="{% static 'js/slider.js' %}"></script>
 	</footer>
 </html>
 
