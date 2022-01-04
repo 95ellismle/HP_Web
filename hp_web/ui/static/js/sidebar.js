@@ -1,5 +1,10 @@
+NUM_DROPDOWN_OPTS = 60;
+
+
 /*
- * Will re-populate fields after form submission
+ * Will re-populate fields after form submission.
+ *
+ * The price range is set in slider.js
 */
 function populate_fields(field_data) {
 	for (const field in field_data) {
@@ -19,9 +24,6 @@ function populate_fields(field_data) {
 			set_form_check_value(check_name);  // To ensure we don't revert to default next time
 		}
 	}
-
-	// Set the price range
-
 }
 
 /*
@@ -83,4 +85,178 @@ function set_form_check_value(name) {
 
 	const new_str = concat_checkboxes(check_name);
 	document.getElementById(final_id).value = new_str;
+}
+
+/*
+ * Django function for getting CSRF token
+*/
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            // Does this cookie string begin with the name we want?
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+const csrftoken = getCookie('csrftoken');
+
+/* Get all the values from a trie
+*/
+function get_all_opts_from_trie(trie, curr_val="", vals=[]) {
+	for (lett in trie) {
+		if (Object.keys(trie[lett]).length != 0) {
+			vals = get_all_opts_from_trie(trie[lett], curr_val + lett, vals);
+		} else {
+			vals.push(curr_val + lett);
+			curr_val = "";
+		}
+	}
+	return vals;
+}
+
+/* Autocomplete logic (fill vals with possible autocompletes, fill input when clicked)
+*/
+function do_autocomplete(dropdown_name, data, curr_val) {
+   const vals = get_all_opts_from_trie(data);
+	var dd_elm = document.getElementById(dropdown_name + '_dropdown');
+
+   if (vals.length<=NUM_DROPDOWN_OPTS & vals.length > 0) {
+	   vals.sort();
+
+	   dd_elm.style.display = 'block';
+	   for (i=0; i<vals.length; i++) {
+		    var dd_opt_elm = document.getElementById(dropdown_name + '_dropdown_' + i);
+		    dd_opt_elm.style.display = 'block';
+			const full_val = curr_val + vals[i];
+		    dd_opt_elm.innerHTML = full_val;
+
+			dd_opt_elm.addEventListener("click", function () {
+				document.getElementById('id_' + dropdown_name).value = full_val;
+				dd_elm.style.display = 'none';
+			});
+	   }
+	   for (i=vals.length; i<NUM_DROPDOWN_OPTS; i++) {
+			var dd_opt_elm = document.getElementById(dropdown_name + '_dropdown_' + i);
+		    dd_opt_elm.style.display = 'none';
+	   }
+
+   } else {
+	   dd_elm.style.display = 'none';
+   }
+}
+
+/* Autocomplete for streets
+*/
+function autocomplete_streets() {
+	const curr_val = document.getElementById('id_street').value.toLowerCase();
+
+	var dd_elm = document.getElementById('street_dropdown');
+	if (curr_val.length < 2) {
+		return
+	} else {
+		dd_elm.style.display = "none";
+	}
+
+
+	// Get valid street names
+	$.ajax({
+       url: '/street_trie/',
+       type: "POST",
+       data: {
+           '_prefix': curr_val
+       },
+       beforeSend: function (xhr) {
+           xhr.setRequestHeader("X-CSRFToken", csrftoken);
+       },
+       success: function (data) {
+		   do_autocomplete('street', data, curr_val);
+       },
+       error: function (error) {
+           console.log(error);
+       }
+    });
+}
+
+/* Autocomplete for cities
+*/
+function autocomplete_cities() {
+	const curr_val = document.getElementById('id_city').value.toLowerCase();
+
+	var dd_elm = document.getElementById('city_dropdown');
+	dd_elm.style.display = "none";
+
+
+	// Get valid street names
+	$.ajax({
+       url: '/city_trie/',
+       type: "POST",
+       data: {
+           '_prefix': curr_val
+       },
+       beforeSend: function (xhr) {
+           xhr.setRequestHeader("X-CSRFToken", csrftoken);
+       },
+       success: function (data) {
+		   do_autocomplete('city', data, curr_val);
+       },
+       error: function (error) {
+           console.log(error);
+       }
+    });
+}
+
+/* Autocomplete for counties
+*/
+function autocomplete_counties() {
+	const curr_val = document.getElementById('id_county').value.toLowerCase();
+
+	var dd_elm = document.getElementById('county_dropdown');
+	if (curr_val.length < 1) {
+		return
+	} else {
+		dd_elm.style.display = "none";
+	}
+
+
+	// Get valid street names
+	$.ajax({
+       url: '/county_trie/',
+       type: "POST",
+       data: {
+           '_prefix': curr_val
+       },
+       beforeSend: function (xhr) {
+           xhr.setRequestHeader("X-CSRFToken", csrftoken);
+       },
+       success: function (data) {
+		   do_autocomplete('county', data, curr_val);
+       },
+       error: function (error) {
+           console.log(error);
+       }
+    });
+}
+
+function add_dropdown_elements() {
+	IDs = ['street_dropdown', 'city_dropdown', 'county_dropdown'];
+	for (i=0; i<IDs.length; i++) {
+		var elm = document.getElementById(IDs[i]);
+
+		for (j=0; j<NUM_DROPDOWN_OPTS; j++) {
+			var new_elm = document.createElement('button');
+			new_elm.id = IDs[i] + '_' + j;
+			new_elm.className = 'options_dropdown_element';
+			var text = document.createTextNode("");
+			new_elm.appendChild(text);
+			new_elm.type = "button";
+			elm.appendChild(new_elm);
+		}
+	}
 }

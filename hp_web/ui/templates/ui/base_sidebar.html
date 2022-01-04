@@ -15,15 +15,21 @@
 
 			<!-- Street -->
 			<label class="w3-bar-item"><b>Street</b></label>
-			<input class="w3-bar-item w3-input mtext-field" type="text" name="street" id="id_street" maxlength="70">
+			<input class="w3-bar-item w3-input mtext-field" type="text" name="street" id="id_street" maxlength="70"
+				   oninput='autocomplete_streets()'>
+			<div class="mtext-field options_dropdown" id="street_dropdown"></div>
 			
 			<!-- City -->
 			<label class="w3-bar-item"><b>City</b></label>
-			<input class="w3-bar-item w3-input mtext-field" type="text" name="city" id="id_city" maxlength="70">
+			<input class="w3-bar-item w3-input mtext-field" type="text" name="city" id="id_city" maxlength="70"
+				   oninput='autocomplete_cities()'>
+			<div class="mtext-field options_dropdown" id="city_dropdown"></div>
 
 			<!-- County -->
 			<label class="w3-bar-item"><b>County</b></label>
-			<input class="w3-bar-item w3-input mtext-field" type="text" name="county" id="id_county" maxlength="40">
+			<input class="w3-bar-item w3-input mtext-field" type="text" name="county" id="id_county" maxlength="40"
+				   oninput='autocomplete_counties()'>
+			<div class="mtext-field options_dropdown" id="county_dropdown"></div>
 
 			<!-- Price -->
 			<label class="w3-bar-item"><b>Price Range</b></label>
@@ -109,6 +115,7 @@
 	<script type="text/javascript">
 		const form_data={{form_data|safe}};
 		populate_fields(form_data);
+		add_dropdown_elements();
 	</script>
 
 	<!-- Main Body -->
