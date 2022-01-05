@@ -6,6 +6,7 @@ from .forms import FilterForm
 
 from hp_config import path as conf_path
 from hp_data import controller as cnt
+from hp_data.controller import NoDataError
 
 import os
 import json
@@ -92,24 +93,20 @@ class DataScreen(View):
         """No submissions etc"""
         form = FilterForm(request.POST)
         return render(request, 'ui/summary.html', {'form': form,
-                                                   'form_data': {},
-                                                   'street_trie': street_trie,
-                                                   'city_trie': city_trie,
-                                                   'county_trie': county_trie,
-                                                   })
+                                                   'form_data': {}})
 
     def post(self, request):
         """After submitting form"""
         form = FilterForm(request.POST)
         form_data = {f: request.POST[f] for f in form.fields}
+        ret_obj = {'form': form, 'form_data': form_data}
 
         if form.is_valid():
             selectors = self._create_selectors(request)
-            cnt.DataController(selectors)
+            try:
+                data = cnt.DataController(selectors)
+            except NoDataError:
+                ret_obj['err_msg'] = 'No data for current selection, try changing fields in the sidebar'
+                return render(request, 'ui/summary.html', ret_obj)
 
-        return render(request, 'ui/summary.html', {'form': form,
-                                                   'form_data': form_data,
-                                                   'street_trie': street_trie,
-                                                   'city_trie': city_trie,
-                                                   'county_trie': county_trie,
-                                                   })
+        return render(request, 'ui/summary.html', ret_obj)

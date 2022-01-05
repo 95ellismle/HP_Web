@@ -29,3 +29,10 @@
 	color: white;
 	font-weight: 600;
 }
+
+.err_msg {
+	font-weight: 600;
+	margin: 6px;
+	color: darkred;
+
+}
