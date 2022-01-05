@@ -109,13 +109,12 @@ const csrftoken = getCookie('csrftoken');
 
 /* Get all the values from a trie
 */
-function get_all_opts_from_trie(trie, curr_val="", vals=[]) {
+function get_all_opts_from_trie(trie, curr_val, vals=[]) {
 	for (lett in trie) {
-		if (Object.keys(trie[lett]).length != 0) {
+		if (lett !== '0') {
 			vals = get_all_opts_from_trie(trie[lett], curr_val + lett, vals);
 		} else {
-			vals.push(curr_val + lett);
-			curr_val = "";
+			vals.push(curr_val);
 		}
 	}
 	return vals;
@@ -124,32 +123,32 @@ function get_all_opts_from_trie(trie, curr_val="", vals=[]) {
 /* Autocomplete logic (fill vals with possible autocompletes, fill input when clicked)
 */
 function do_autocomplete(dropdown_name, data, curr_val) {
-   const vals = get_all_opts_from_trie(data);
-	var dd_elm = document.getElementById(dropdown_name + '_dropdown');
+    const vals = get_all_opts_from_trie(data, curr_val);
+    var dd_elm = document.getElementById(dropdown_name + '_dropdown');
 
-   if (vals.length<=NUM_DROPDOWN_OPTS & vals.length > 0) {
-	   vals.sort();
+    if (vals.length<=NUM_DROPDOWN_OPTS & vals.length > 0) {
+        vals.sort();
 
-	   dd_elm.style.display = 'block';
-	   for (i=0; i<vals.length; i++) {
-		    var dd_opt_elm = document.getElementById(dropdown_name + '_dropdown_' + i);
-		    dd_opt_elm.style.display = 'block';
-			const full_val = curr_val + vals[i];
-		    dd_opt_elm.innerHTML = full_val;
+        dd_elm.style.display = 'block';
+        for (i=0; i<vals.length; i++) {
+     	    var dd_opt_elm = document.getElementById(dropdown_name + '_dropdown_' + i);
+     	    dd_opt_elm.style.display = 'block';
+     		const full_val = vals[i];
+     	    dd_opt_elm.innerHTML = full_val;
 
-			dd_opt_elm.addEventListener("click", function () {
-				document.getElementById('id_' + dropdown_name).value = full_val;
-				dd_elm.style.display = 'none';
-			});
-	   }
-	   for (i=vals.length; i<NUM_DROPDOWN_OPTS; i++) {
-			var dd_opt_elm = document.getElementById(dropdown_name + '_dropdown_' + i);
-		    dd_opt_elm.style.display = 'none';
-	   }
+     		dd_opt_elm.addEventListener("click", function () {
+     			document.getElementById('id_' + dropdown_name).value = full_val;
+     			dd_elm.style.display = 'none';
+     		});
+        }
+        for (i=vals.length; i<NUM_DROPDOWN_OPTS; i++) {
+     		var dd_opt_elm = document.getElementById(dropdown_name + '_dropdown_' + i);
+     	    dd_opt_elm.style.display = 'none';
+        }
 
-   } else {
-	   dd_elm.style.display = 'none';
-   }
+    } else {
+        dd_elm.style.display = 'none';
+    }
 }
 
 /* Autocomplete for streets

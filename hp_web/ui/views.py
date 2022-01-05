@@ -30,11 +30,14 @@ if os.environ.get('DO_ONCE') is None:
         for word in pc_dict:
             curr_dict = root
 
-            for letter in word:
+            for letter in word[:-1]:
                 low_letter = letter.lower()
                 curr_dict = curr_dict.setdefault(low_letter, {})
+            letter = word[-1].lower()
+            curr_dict[letter] = {0: None}
 
         return root
+
 
     street_trie = _create_trie(streets_map)
     city_trie = _create_trie(city_map)
