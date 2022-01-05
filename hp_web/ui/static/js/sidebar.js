@@ -169,7 +169,8 @@ function autocomplete_streets() {
        url: '/street_trie/',
        type: "POST",
        data: {
-           '_prefix': curr_val
+           '_prefix': curr_val,
+		   '_loc': 'street'
        },
        beforeSend: function (xhr) {
            xhr.setRequestHeader("X-CSRFToken", csrftoken);
@@ -197,7 +198,8 @@ function autocomplete_cities() {
        url: '/city_trie/',
        type: "POST",
        data: {
-           '_prefix': curr_val
+           '_prefix': curr_val,
+           '_loc': "city"
        },
        beforeSend: function (xhr) {
            xhr.setRequestHeader("X-CSRFToken", csrftoken);
@@ -229,7 +231,8 @@ function autocomplete_counties() {
        url: '/county_trie/',
        type: "POST",
        data: {
-           '_prefix': curr_val
+           '_prefix': curr_val,
+           '_loc': "county"
        },
        beforeSend: function (xhr) {
            xhr.setRequestHeader("X-CSRFToken", csrftoken);

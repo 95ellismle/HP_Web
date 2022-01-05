@@ -38,46 +38,23 @@ if os.environ.get('DO_ONCE') is None:
 
         return root
 
-
     street_trie = _create_trie(streets_map)
     city_trie = _create_trie(city_map)
     county_trie = _create_trie(county_map)
     os.environ['DO_ONCE'] = 'Done'
 
 
-def fetch_county_trie(request):
+def fetch_trie(request):
+    data = {}
     if request.method == "POST":
+        loc = request.POST.get('_loc', '')
+        tries = {'street': street_trie, 'city': city_trie,
+                 'county': county_trie, '': {}}
         pre = request.POST.get('_prefix', '')
         if len(pre) > 1:
-            data = county_trie
+            data = tries[loc]
             for letter in pre:
                 data = data.get(letter.lower(), {})
-    else:
-        data = {'method': request.method}
-    return JsonResponse(data)
-
-
-def fetch_city_trie(request):
-    if request.method == "POST":
-        pre = request.POST.get('_prefix', '')
-        if len(pre) > 1:
-            data = city_trie
-            for letter in pre:
-                data = data.get(letter.lower(), {})
-    else:
-        data = {'method': request.method}
-    return JsonResponse(data)
-
-
-def fetch_street_trie(request):
-    if request.method == "POST":
-        pre = request.POST.get('_prefix', '')
-        if len(pre) > 1:
-            data = street_trie
-            for letter in pre:
-                data = data.get(letter.lower(), {})
-    else:
-        data = {'method': request.method}
     return JsonResponse(data)
 
 
