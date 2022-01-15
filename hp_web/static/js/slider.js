@@ -88,6 +88,8 @@ function setSlidersFromForm(form_data) {
 	// Set slider 1
 	if (form_data['price_low']) {
 		var val = (form_data['price_low'] / maxVal) * sliderMaxValue;
+		val = parseInt(val);
+		console.log(val);
 		sliderOne.value = val;
 		val = readableNumber(form_data['price_low']);
 		sliderOneVal.innerHTML = val;
@@ -96,6 +98,8 @@ function setSlidersFromForm(form_data) {
 	// Set slider 2
 	if (form_data['price_high']) {
 		val = (form_data['price_high'] / maxVal) * sliderMaxValue;
+		val = parseInt(val);
+		console.log(val);
 		sliderTwo.value = val;
 		val = readableNumber(form_data['price_high']);
 		sliderTwoVal.innerHTML = val;

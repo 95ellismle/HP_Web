@@ -1,3 +1,6 @@
+NUM_DROPDOWN_OPTS = 60;
+
+
 /*
  * Will re-populate fields after form submission.
  *
@@ -106,41 +109,156 @@ const csrftoken = getCookie('csrftoken');
 
 /* Get all the values from a trie
 */
-function get_all_opts_from_trie(trie, curr_val="", vals=[]) {
+function get_all_opts_from_trie(trie, curr_val, vals=[]) {
 	for (lett in trie) {
-		if (Object.keys(trie[lett]).length != 0) {
-			get_all_opts_from_trie(trie[lett], curr_val + lett, vals);
+		if (lett !== '0') {
+			vals = get_all_opts_from_trie(trie[lett], curr_val + lett, vals);
 		} else {
-			vals.push(curr_val + lett);
-			curr_val = "";
+			vals.push(curr_val);
 		}
 	}
 	return vals;
+}
+
+/* Autocomplete logic (fill vals with possible autocompletes, fill input when clicked)
+*/
+function do_autocomplete(dropdown_name, data, curr_val) {
+    const vals = get_all_opts_from_trie(data, curr_val);
+    var dd_elm = document.getElementById(dropdown_name + '_dropdown');
+
+    if (vals.length<=NUM_DROPDOWN_OPTS & vals.length > 0) {
+        vals.sort();
+
+        dd_elm.style.display = 'block';
+        for (i=0; i<vals.length; i++) {
+     	    var dd_opt_elm = document.getElementById(dropdown_name + '_dropdown_' + i);
+     	    dd_opt_elm.style.display = 'block';
+     		const full_val = vals[i];
+     	    dd_opt_elm.innerHTML = full_val;
+
+     		dd_opt_elm.addEventListener("click", function () {
+     			document.getElementById('id_' + dropdown_name).value = full_val;
+     			dd_elm.style.display = 'none';
+     		});
+        }
+        for (i=vals.length; i<NUM_DROPDOWN_OPTS; i++) {
+     		var dd_opt_elm = document.getElementById(dropdown_name + '_dropdown_' + i);
+     	    dd_opt_elm.style.display = 'none';
+        }
+
+    } else {
+        dd_elm.style.display = 'none';
+    }
 }
 
 /* Autocomplete for streets
 */
 function autocomplete_streets() {
 	const curr_val = document.getElementById('id_street').value.toLowerCase();
+
+	var dd_elm = document.getElementById('street_dropdown');
 	if (curr_val.length < 2) {
 		return
+	} else {
+		dd_elm.style.display = "none";
 	}
+
 
 	// Get valid street names
 	$.ajax({
        url: '/street_trie/',
        type: "POST",
        data: {
-           '_prefix': curr_val
+           '_prefix': curr_val,
+		   '_loc': 'street'
        },
        beforeSend: function (xhr) {
            xhr.setRequestHeader("X-CSRFToken", csrftoken);
        },
        success: function (data) {
-		   const vals = get_all_opts_from_trie(data);
+		   do_autocomplete('street', data, curr_val);
        },
        error: function (error) {
            console.log(error);
        }
     });
+}
+
+/* Autocomplete for cities
+*/
+function autocomplete_cities() {
+	const curr_val = document.getElementById('id_city').value.toLowerCase();
+
+	var dd_elm = document.getElementById('city_dropdown');
+	dd_elm.style.display = "none";
+
+
+	// Get valid street names
+	$.ajax({
+       url: '/city_trie/',
+       type: "POST",
+       data: {
+           '_prefix': curr_val,
+           '_loc': "city"
+       },
+       beforeSend: function (xhr) {
+           xhr.setRequestHeader("X-CSRFToken", csrftoken);
+       },
+       success: function (data) {
+		   do_autocomplete('city', data, curr_val);
+       },
+       error: function (error) {
+           console.log(error);
+       }
+    });
+}
+
+/* Autocomplete for counties
+*/
+function autocomplete_counties() {
+	const curr_val = document.getElementById('id_county').value.toLowerCase();
+
+	var dd_elm = document.getElementById('county_dropdown');
+	if (curr_val.length < 1) {
+		return
+	} else {
+		dd_elm.style.display = "none";
+	}
+
+
+	// Get valid street names
+	$.ajax({
+       url: '/county_trie/',
+       type: "POST",
+       data: {
+           '_prefix': curr_val,
+           '_loc': "county"
+       },
+       beforeSend: function (xhr) {
+           xhr.setRequestHeader("X-CSRFToken", csrftoken);
+       },
+       success: function (data) {
+		   do_autocomplete('county', data, curr_val);
+       },
+       error: function (error) {
+           console.log(error);
+       }
+    });
+}
+
+function add_dropdown_elements() {
+	IDs = ['street_dropdown', 'city_dropdown', 'county_dropdown'];
+	for (i=0; i<IDs.length; i++) {
+		var elm = document.getElementById(IDs[i]);
+
+		for (j=0; j<NUM_DROPDOWN_OPTS; j++) {
+			var new_elm = document.createElement('button');
+			new_elm.id = IDs[i] + '_' + j;
+			new_elm.className = 'options_dropdown_element';
+			var text = document.createTextNode("");
+			new_elm.appendChild(text);
+			new_elm.type = "button";
+			elm.appendChild(new_elm);
+		}
+	}
 }

@@ -9,7 +9,7 @@ class Filter(models.Model):
     city = models.CharField(max_length=70)
     county = models.CharField(max_length=40)
     is_new = models.CharField(max_length=14)
-    dwelling_type = models.CharField(max_length=50)
+    dwelling_type = models.CharField(max_length=55)
     tenure = models.CharField(max_length=20)
     price_low = models.IntegerField()
     price_high = models.IntegerField()

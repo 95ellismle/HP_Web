@@ -2,50 +2,20 @@ from datetime import datetime
 from django.http import JsonResponse
 from django.shortcuts import render
 from django.views import View
-from .forms import FilterForm
+import pandas as pd
 
-from hp_config import path as conf_path
+from .forms import FilterForm
 from hp_data import controller as cnt
+from hp_data import utils as ut
 from hp_data.controller import NoDataError
 
 import os
 import json
-
-if os.environ.get('DO_ONCE') is None:
-
-    # One time setup
-    # Open some useful config files
-    print('LOADING FILES')
-    maps_dir = conf_path / 'maps'
-    with open(maps_dir / 'street_to_pc.json', 'r') as f:
-        streets_map = json.load(f)
-    with open(maps_dir / 'city_to_pc.json', 'r') as f:
-        city_map = json.load(f)
-    with open(maps_dir / 'county_to_pc.json', 'r') as f:
-        county_map = json.load(f)
-
-    # Create the tries for the autocompletes
-    def _create_trie(pc_dict):
-        """Will create a trie with values that can be autocompleted in a text field"""
-        root = {}
-        for word in pc_dict:
-            curr_dict = root
-
-            for letter in word[:-1]:
-                low_letter = letter.lower()
-                curr_dict = curr_dict.setdefault(low_letter, {})
-            letter = word[-1].lower()
-            curr_dict[letter] = {0: None}
-
-        return root
-
-    street_trie = _create_trie(streets_map)
-    city_trie = _create_trie(city_map)
-    county_trie = _create_trie(county_map)
-    os.environ['DO_ONCE'] = 'Done'
+import yaml
 
 
 def fetch_trie(request):
+    """View to fetch the trie requested via AJAX and send it as json"""
     data = {}
     if request.method == "POST":
         loc = request.POST.get('_loc', '')
@@ -60,6 +30,7 @@ def fetch_trie(request):
 
 
 class DataScreen(View):
+    """View for the general data screen"""
     _str_keys = {'city', 'street', 'postcode', 'county', }
     _checks = {'is_new': 2, 'tenure': 2, 'dwelling_type': 5}
 
@@ -87,6 +58,14 @@ class DataScreen(View):
                 if high < 2.5e6:
                     selectors['price_high'] = high
 
+        # Now prep the dates
+        min_date = DATA_STATS['min_date']
+        max_date = DATA_STATS['max_date']
+        if 'date_to' in selectors and selectors['date_to'] >= max_date:
+            selectors.pop('date_to')
+        if 'date_from' in selectors and selectors['date_from'] <= min_date:
+            selectors.pop('date_from')
+
         return selectors
 
     def get(self, request):
@@ -101,6 +80,8 @@ class DataScreen(View):
         form_data = {f: request.POST[f] for f in form.fields}
         ret_obj = {'form': form, 'form_data': form_data}
 
+        print(form.is_valid())
+        print(form.errors)
         if form.is_valid():
             selectors = self._create_selectors(request)
             try:
@@ -108,5 +89,6 @@ class DataScreen(View):
             except NoDataError:
                 ret_obj['err_msg'] = 'No data for current selection, try changing fields in the sidebar'
                 return render(request, 'ui/summary.html', ret_obj)
+            ret_obj['table'] = data.data.iloc[:10]
 
         return render(request, 'ui/summary.html', ret_obj)
