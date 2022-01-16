@@ -114,12 +114,72 @@ def test_select_data():
     df = pd.concat(cnt._select_data(df) for df in all_df)
     assert min(df['date_transfer']) == date1
     assert max(df['date_transfer']) == date2
+    print()
 
     # Postcode selection
     selectors['postcode'] = 'M345'
-    selectors['date_from'] = pd.to_datetime('2019/01/01', format='%Y/%m/%d')
+    selectors['date_from'] = pd.to_datetime('2019/02/01', format='%Y/%m/%d')
     cnt = InertController(selectors)
     cnt._data_files_to_read = cnt._get_data_files()
     all_df = cnt._read_data_files()
     df = pd.concat(cnt._select_data(df) for df in all_df)
-    #print(df)
+    assert all(df['postcode'].str.slice(0, 4) == 'M345')
+    assert min(df['date_transfer']) == pd.to_datetime('2019/02/01', format='%Y/%m/%d')
+    assert max(df['date_transfer']) == pd.to_datetime('2019/11/29', format='%Y/%m/%d')
+    print()
+
+    # Street and city selection
+    selectors.pop('postcode')
+    selectors['city'] = 'Liverp'
+    selectors['street'] = 'the'
+    cnt = InertController(selectors)
+    cnt._data_files_to_read = cnt._get_data_files()
+    all_df = cnt._read_data_files()
+    df = pd.concat(cnt._select_data(df) for df in all_df)
+    assert all(df['street'].str.startswith('The'))
+    assert all(df['city'].str.startswith('Liverpool'))
+    assert min(df['date_transfer']) == pd.to_datetime('2019/02/01', format='%Y/%m/%d')
+    assert max(df['date_transfer']) == pd.to_datetime('2019/11/29', format='%Y/%m/%d')
+
+    # New build
+    print()
+    selectors.pop('city')
+    selectors.pop('street')
+    selectors['is_new'] = True
+    selectors['date_from'] = pd.to_datetime('2019/01/01', format='%Y/%m/%d')
+    selectors['date_to'] = pd.to_datetime('2019/12/31', format='%Y/%m/%d')
+    cnt = InertController(selectors)
+    cnt._data_files_to_read = cnt._get_data_files()
+    all_df = cnt._read_data_files()
+    ref_df = all_df[0].loc[all_df[0]['is_new'], 'is_new']
+    df = pd.concat(cnt._select_data(df) for df in all_df)
+    assert all(df['is_new'])
+    assert len(df) == len(ref_df)
+
+    # Tenure
+    print()
+    selectors.pop('is_new')
+    selectors['tenure'] = 'freehold'
+    selectors['city'] = 'derby'
+    cnt = InertController(selectors)
+    cnt._data_files_to_read = cnt._get_data_files()
+    all_df = cnt._read_data_files()
+    df = pd.concat(cnt._select_data(df) for df in all_df)
+    ref_df = all_df[1] if all_df[1].loc[0, 'postcode'].startswith('D') else all_df[0]
+    ref_df = ref_df.loc[(ref_df['tenure'] == 'Freehold')
+                        & (ref_df['city'] == 'Derby'), 'tenure']
+    assert all(df['tenure'] == 'Freehold')
+    assert len(ref_df) == len(df)
+
+    # Dwelling type
+    print()
+    selectors['dwelling_type'] = ['Detached', 'seMi-deta']
+    selectors['city'] = 'derby'
+    cnt = InertController(selectors)
+    cnt._data_files_to_read = cnt._get_data_files()
+    all_df = cnt._read_data_files()
+    df = pd.concat(cnt._select_data(df) for df in all_df)
+    assert all(df['city'].unique() == 'Derby')
+    assert set(df['dwelling_type'].unique()) == {'Detached', 'Semi-Detached'}
+
+

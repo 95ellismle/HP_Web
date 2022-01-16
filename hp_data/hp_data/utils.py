@@ -128,6 +128,7 @@ def find_end(data, sort_order, val, first_or_last='first', init_low=None, init_u
     is_str = isinstance(val, str)
     if is_str:
         len_str = len(val)
+        val = val.lower()
 
     do_first = first_or_last == 'first'
     direction = -1 if do_first else 1
@@ -136,13 +137,13 @@ def find_end(data, sort_order, val, first_or_last='first', init_low=None, init_u
     if do_first:
         new_val = data[sort_order[low]]
         if is_str:
-            new_val = new_val[:len_str]
+            new_val = new_val[:len_str].lower()
         if new_val == val:
             return low
     else:
         new_val = data[sort_order[upp]]
         if is_str:
-            new_val = new_val[:len_str]
+            new_val = new_val[:len_str].lower()
         if new_val == val:
             return upp
 
@@ -162,8 +163,8 @@ def find_end(data, sort_order, val, first_or_last='first', init_low=None, init_u
         #print(''.join([str(i).ljust(7) for i in (upp, low, mid, new_val, val)]))
         new_val_m = data[sort_order[mid + direction]]
         if is_str:
-            new_val = new_val[:len_str]
-            new_val_m = new_val_m[:len_str]
+            new_val = new_val[:len_str].lower()
+            new_val_m = new_val_m[:len_str].lower()
 
         # Check if we should keep going
         # Find the first element

@@ -1,6 +1,12 @@
 *.py[a-z]
 *.sqlite3
 
+# Files created with ETL
+hp_config/hp_config/data_stats.yaml
+hp_config/hp_config/maps/city_to_pc.json
+hp_config/hp_config/maps/county_to_pc.json
+hp_config/hp_config/maps/street_to_pc.json
+
 admin/
 # Byte-compiled / optimized / DLL files
 __pycache__/

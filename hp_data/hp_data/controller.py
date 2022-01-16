@@ -42,60 +42,99 @@ class DataController:
         t1 = time.time()
         min_ind, max_ind = self._datetime_selection(df)
         inds = set(range(min_ind, max_ind))
-        print(f'DateTime: {time.time() - t1}')
+        selection_timings = {'datetime': time.time() - t1}
 
-        is_contig = True
+        just_dt = True
 
-        # Handle postcode
-        t1 = time.time()
-        postcode = self._selectors.get('postcode', '')
-        for col in ('street', 'city', 'county', 'postcode'):
-            selector_val = self._selectors.get(col, '')
-            if len(selector_val) > 1:
+        # Handle price
+        if 'price_low' in self._selectors or 'price_high' in self._selectors:
+            t1 = time.time()
+            just_dt = False
+            price_low = df.loc[df['price_sort_index'].values[0], 'price']
+            price_high = df.loc[df['price_sort_index'].values[-1], 'price']
+            if 'price_low' in self._selectors:
+                price_low = self._selectors['price_low']
+            if 'price_high' in self._selectors:
+                price_high = self._selectors['price_high']
+            so = df[f'price_sort_index'].values
+            first_ind, last_ind = ut.find_in_data(df['price'].values,
+                                                  so,
+                                                  selector_val)
+            inds = inds.intersection(set(so[first_ind:last_ind+1]))
+            selection_timings['price'] = time.time() - t1
+
+        # Handle single selections
+        for col in ('street', 'city', 'county', 'postcode', 'is_new', 'tenure'):
+            t1 = time.time()
+            inds, changed = self._select_from_1_col(df, col, inds)
+            if changed:
+                selection_timings[col] = time.time() - t1
+                just_dt = False
+
+        # Handle multiple selections from the same selector
+        for col in ('dwelling_type', ):
+            t1 = time.time()
+            selector_vals = self._selectors.get(col, [])
+            if not selector_vals:
+                continue
+
+            so = df[f'{col}_sort_index'].values
+            new_inds = []
+            for val in selector_vals:
+                if isinstance(val, str) and len(val) < 2:
+                    continue
+                just_dt = False
                 so = df[f'{col}_sort_index'].values
-                first_ind, last_ind = ut.find_in_data(df[col].values,
-                                                      so,
-                                                      selector_val)
-                is_contig *= (first_ind != 0) and (last_ind != len(df)-1)
-                print(first_ind, last_ind)
-                if not is_contig:
-                    inds.intersection({so[i] for i in range(first_ind, last_ind+1)})
-        print(f"Location: {time.time() - t1}")
+                first_ind, last_ind = ut.find_in_data(df[col].values, so, val)
+                if first_ind != last_ind:
+                    new_inds.extend(so[first_ind: last_ind])
+            inds = inds.intersection(new_inds)
+            selection_timings[col] = time.time() - t1
 
-        # New build
+        # Indexing the data to return
         t1 = time.time()
-        if 'is_new' in self._selectors:
-            df = df.dropna(axis=0, subset=['is_new'])
-            assert len(self._selectors['is_new']) == 1
-            if self._selectors['is_new'][0] == 'is_new':
-                df = df[df['is_new']]
-            else:
-                df = df[~df['is_new']]
-        print(f'Is New: {time.time() - t1}')
-
-        # Freehold vs Leasehold
-        t1 = time.time()
-        if 'tenure' in self._selectors:
-            df = df.dropna(axis=0, subset=['tenure'])
-            assert len(self._selectors['tenure']) == 1
-            df = df[df['tenure'] == self._selectors['tenure'][0]]
-        print(f'Tenure: {time.time() - t1}')
-
-        # Price
-        t1 = time.time()
-        if 'price_high' in self._selectors:
-            df = df[df['price'] <= self._selectors['price_high']/1000.]
-        if 'price_low' in self._selectors:
-            df = df[df['price'] >= self._selectors['price_low']/1000.]
-        print(f'Price: {time.time() - t1}')
-
-        t1 = time.time()
-        if is_contig:
-            df = df.iloc[min_ind: max_ind]
+        if just_dt:
+            df = df.iloc[min_ind:max_ind]
         else:
             df = df.iloc[list(inds)]
-        print(f'Splicing: {time.time() - t1}')
+        selection_timings['splicing'] = time.time() - t1
+
+        # Print timings for each selection
+        print("Time take to select:")
+        for i in selection_timings:
+            print(f"    - '{i}': {selection_timings[i]:.3f}")
+
         return df
+
+    def _select_from_1_col(self, df, col, inds):
+        """Will select return the start and end indices of search val from the sort index.
+
+        The _selectors attribute will be used to determine what to search for.
+
+        Args:
+            df: DataFrame to search in
+            col: Name of the col to search in
+            inds: Indices to edit to contain all values with the search value
+
+        Returns:
+            set<int>: The indices within the dataframe where the value appears
+        """
+        selector_val = self._selectors.get(col)
+
+        if isinstance(selector_val, str) and len(selector_val) < 2:
+            return inds, False
+        if selector_val is None:
+            return inds, False
+
+        just_dt = False
+        so = df[f'{col}_sort_index'].values
+        first_ind, last_ind = ut.find_in_data(df[col].values,
+                                              so,
+                                              selector_val)
+        if first_ind == last_ind:
+            return set(), True
+
+        return inds.intersection(so[first_ind:last_ind+1]), True
 
     def _datetime_selection(self, df):
         """Will splice the data by the requested datetime.
