@@ -1,10 +1,25 @@
 {% extends 'ui/base_sidebar.html' %}
+{% load static %}
 
 
 
 {% block main_content %}
-<h1>Data</h1>
 <p class='err_msg'>{{err_msg}}</p>
+
+<script type='text/javascript' src="{% static 'js/table.js' %}"></script>
+<link rel="stylesheet" href="{% static 'css/table.css' %}">
+
+<table id="id_summary_table"></table>
+<script>
+	{% autoescape off %}
+		const table_data = {{table}};
+	{% endautoescape %}
+
+	if (Object.entries(table_data).length !== 0) {
+		let t = new Table(table_data, 50, 'id_summary_table');
+		t.create_table();
+	}
+</script>
 
 
 {% endblock %}

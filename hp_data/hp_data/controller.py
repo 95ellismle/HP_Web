@@ -20,22 +20,50 @@ class DataController:
     _full_data_dir = f'{data_dir}/$<year>'
     _pc_dir = f'{_full_data_dir}/postcodes'
 
-    def __init__(self, selectors):
+    def __init__(self, selectors, cols_to_display=None):
         self._start_time = time.time()
         self._selectors = selectors
+        self._set_years_to_get()
+        self._cols_to_display = cols_to_display
 
+    def read_data(self):
+        """Will read the data"""
         self._data_files_to_read = self._get_data_files()
         t1 = time.time()
 
         all_df = self._read_data_files()
         t2 = time.time()
 
-        self.data = pd.concat(self._select_data(df) for df in all_df)
+        try:
+            self.data = pd.concat(self._select_data(df) for df in all_df)
+        except ValueError:
+            raise NoDataError("No data for that selection")
+        if len(self.data) == 0:
+            raise NoDataError("No data for that selection")
         self._end_time = time.time()
 
         print(f"Time Taken for file find: {t1 - self._start_time}")
         print(f"Time Taken for file read: {t2 - t1}")
         print(f"Time Taken for data splice: {self._end_time - t2}")
+
+    def _set_years_to_get(self):
+        """Will set which years to read from files and which to get from the cache
+
+        Sets the attributes:
+            - self._years_to_get
+            - self._years_to_read
+            - self._years_from_cache
+        """
+        min_year = self._selectors.get('date_from',
+                                       hpd.DATA_STATS['min_date']).year
+        max_year = self._selectors.get('date_to',
+                                       hpd.DATA_STATS['max_date']).year
+
+        self._years_to_get = set(range(min_year, max_year+1))
+        self._years_to_read = self._years_to_get - set(hpd.CACHE_DATA.keys())
+        self._years_to_read = tuple(sorted(self._years_to_read))
+        self._years_from_cache = tuple(self._years_to_get.intersection(hpd.CACHE_DATA.keys()))
+        self._years_from_cache = tuple(sorted(self._years_from_cache))
 
     def _select_data(self, df):
         """Will select the relevant data from the data files."""
@@ -50,6 +78,7 @@ class DataController:
         if 'price_low' in self._selectors or 'price_high' in self._selectors:
             t1 = time.time()
             just_dt = False
+
             price_low = df.loc[df['price_sort_index'].values[0], 'price']
             price_high = df.loc[df['price_sort_index'].values[-1], 'price']
             if 'price_low' in self._selectors:
@@ -57,9 +86,11 @@ class DataController:
             if 'price_high' in self._selectors:
                 price_high = self._selectors['price_high']
             so = df[f'price_sort_index'].values
-            first_ind, last_ind = ut.find_in_data(df['price'].values,
-                                                  so,
-                                                  selector_val)
+
+            first_ind = ut.find_end(df['price'].values, so,
+                                    price_low, 'first')
+            last_ind = ut.find_end(df['price'].values, so,
+                                   price_high, 'last', first_ind)
             inds = inds.intersection(set(so[first_ind:last_ind+1]))
             selection_timings['price'] = time.time() - t1
 
@@ -96,7 +127,7 @@ class DataController:
         if just_dt:
             df = df.iloc[min_ind:max_ind]
         else:
-            df = df.iloc[list(inds)]
+            df = df.iloc[sorted(inds)]
         selection_timings['splicing'] = time.time() - t1
 
         # Print timings for each selection
@@ -104,7 +135,10 @@ class DataController:
         for i in selection_timings:
             print(f"    - '{i}': {selection_timings[i]:.3f}")
 
-        return df
+        if self._cols_to_display:
+            return df.loc[:, self._cols_to_display]
+        else:
+            return df
 
     def _select_from_1_col(self, df, col, inds):
         """Will select return the start and end indices of search val from the sort index.
@@ -154,26 +188,17 @@ class DataController:
 
         return first_ind, last_ind
 
-    def _splice_with_sort_index(self, df, col, min_=None, max_=None):
-        """"""
-
-
     def _get_data_files(self):
         """Will find which data files to read"""
-        min_year = self._selectors.get('date_from',
-                                       hpd.DATA_STATS['min_date']).year
-        max_year = self._selectors.get('date_to',
-                                       hpd.DATA_STATS['max_date']).year
-        years_to_read = list(range(min_year, max_year+1))
 
         # Get data from the postcode files
         if any(i in self._selectors for i in self._loc_fields):
-            data_filenames = self._get_loc_files(years_to_read)
+            data_filenames = self._get_loc_files()
 
         # Read the standard feather files
         else:
             data_filenames = [Path(self._full_data_dir.replace('$<year>', str(y))) / f'pp-{y}.feather'
-                              for y in years_to_read]
+                              for y in self._years_to_read]
 
         return [i for i in data_filenames if i.is_file()]
 
@@ -189,18 +214,20 @@ class DataController:
         if 'price_low' in self._selectors or 'price_high' in self._selectors:
             cols += ['price_sort_index']
 
-        df = [ft.FeatherDataset([fn]).read_pandas(columns=cols)
+        all_df = [ft.FeatherDataset([fn]).read_pandas(columns=cols)
               for fn in self._data_files_to_read]
+        for yr in self._years_from_cache:
+            all_df.append(hpd.CACHE_DATA[yr])
 
-        return df
+        return all_df
 
-    def _get_loc_files(self, years_to_read: list):
+    def _get_loc_files(self):
         """Get the data from the postcode files.
 
         Args:
             years_to_read: a list of year numbers to read
         """
-        years_to_read = list(map(str, years_to_read))
+        years_to_read = list(map(str, self._years_to_read))
 
         # Get relevant postcodes
         pcs = set()
