@@ -9,6 +9,7 @@ import yaml
 from data import path as dt_path
 from hp_config import path as conf_path
 from hp_data import utils as ut
+from hp_data import datacache as dc
 
 log = logging.getLogger(__name__)
 
@@ -35,49 +36,13 @@ with open(conf_path / 'data_stats.yaml', 'r') as f:
             DATA_STATS[key] = pd.to_datetime(DATA_STATS[key], format='%Y/%m/%d')
 DATA_STATS['poss_postcodes_trie'] = ut.create_trie(DATA_STATS['poss_postcodes'])
 
-# Load the cache
+do_test = os.environ.get('DO_TEST', False)
+if do_test == 'True':
+    cache_years = [2021]
+else:
+    cache_years = os.environ.get('CACHE_YEARS', None)
 
-curr_year = pd.Timestamp.now() - pd.to_timedelta(15, 'w')
-curr_year = curr_year.year + 1
-num_prev_years = 10
-skip_cache = bool(os.environ.get('DO_TEST', False))
-skip_cache = True
-CACHE_DATA = {}
+cache_years = [2021]
 
-
-"""
-The cache needs thinking about.
-It should be in its own module and initialised here.
-
-Firstly, because it is a more flexible data structure than a column based table,
-the cache can store data separately. E.g:
-    new_build_data = {year1:
-                          {postcode1:
-                                    {is_new:
-                                           {
-                                            dwelling_type1:  {
-                                                              freehold: DataFrame,
-                                                              leasehold: DataFrame
-                                                              }
-                                            dwelling_type2: ...
-                                           },
-                                    not_new: ...
-                                    },
-                          postcode2: ...
-                          },
-                      year2: ...
-                     }
-
-Then the sort_indices for: is_new and dwelling_type can be dropped. So too can the data columns.
-
-This should reduce memory footprint by ~25% and increase data selection speed.
-"""
-
-print(f"Do Cache: {not skip_cache}")
-if not skip_cache:
-    for year in range(curr_year - num_prev_years, curr_year):
-        pc_dir = dt_path / f"{year}/postcodes"
-        CACHE_DATA[year] = {}
-        for pc in pc_dir.glob('*.feather'):
-            CACHE_DATA[year][pc.stem] = pd.read_feather(pc)
+cache = dc.DataCache(cache_years)
 

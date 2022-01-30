@@ -1,7 +1,9 @@
 import numpy as np
 import pandas as pd
+import os
 import time
 
+os.environ['DO_TEST'] = "True"
 from hp_data import utils
 
 

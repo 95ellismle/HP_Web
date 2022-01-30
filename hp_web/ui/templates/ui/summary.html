@@ -12,7 +12,9 @@
 <table id="id_summary_table"></table>
 <script>
 	{% autoescape off %}
-		const table_data = {{table}};
+	{% for k, v in data.items %}
+		const {{k}} = {{v}};
+	{% endfor %}
 	{% endautoescape %}
 
 	if (Object.entries(table_data).length !== 0) {

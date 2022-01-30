@@ -8,6 +8,8 @@ def create_trie(data):
     """
     root = {}
     for word in data:
+        if not word:
+            continue
         curr_dict = root
         for letter in word[:-1]:
             low_letter = letter.lower()

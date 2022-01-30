@@ -5,6 +5,7 @@ from django.views import View
 
 import json
 import os
+import numpy as np
 import pandas as pd
 import yaml
 
@@ -93,25 +94,63 @@ class DataScreen(View):
                                                    'table': {},
                                                    'err_msg': ''})
 
+    def _append_to_data(self, df, col_names, data):
+        """Will build up the data dict to send to the front end.
+
+        Args:
+            df: Input data (from controller)
+            col_names: The names of extra columns all with the same value
+            data: dict that will store the data to pass to the frontend
+        """
+        len_df = len(df)
+        #for col in df.columns:
+        #    if df.dtypes[col] == 'category':
+        #        data.setdefault(col, []).extend(list(df[col].cat.codes))
+
+        #    elif df.dtypes[col] == 'datetime64[ns]':
+        #        data.setdefault(col, []).extend(df[col].dt.strftime('%Y-%d-%m'))
+
+        #    else:
+        #        data.setdefault(col, []).extend(list(df[col]))
+
+        for col in col_names:
+            data.setdefault(col, []).append([col_names[col], len_df])
+
+        return data, len_df
+
     def post(self, request):
         """After submitting form"""
         form = FilterForm(request.POST)
         form_data = {f: request.POST[f] for f in form.fields}
-        ret_obj = {'form': form, 'form_data': form_data, 'table': {}, 'err_msg': ''}
+        ret_obj = {'form': form, 'form_data': form_data, 'err_msg': ''}
 
         if form.is_valid():
             selectors = self._create_selectors(request)
+            # Create data generator
             try:
-                data = cnt.DataController(selectors, ['date_transfer', 'price', 'paon', 'street', 'city', 'county',
-                                                      'postcode', 'dwelling_type', 'is_new', 'tenure'])
-                data.read_data()
-            except NoDataError:
+                cont = cnt.DataController(selectors, ['date_transfer', 'price', 'paon', 'street',
+                                                      'city', 'county', 'postcode',])
+                data = cont.read_data()
+            except NoDataError as e:
                 ret_obj['err_msg'] = 'No data for current selection, try changing fields in the sidebar'
+                print('Exception: ', e)
                 return render(request, 'ui/summary.html', ret_obj)
-            if len(data.data) > 10000:
-                ret_obj['err_msg'] = 'Only the first 10,000 results are being passed back from the server. Please narrow your search for accurate sorting'
-                print(len(data.data))
-            ret_obj['table'] = data.data.iloc[:10000].to_json(orient='split')
+
+            # Now actually read the data (first 10,000 lines)
+            data_len = 0
+            ret_data = {}
+            for df, col_names in data:
+                ret_data, len_ = self._append_to_data(df, col_names, ret_data)
+                data_len += len_
+
+                if data_len > 10000:
+                    ret_obj['err_msg'] = ('Only the first 10,000 results are being passed back from the server.'
+                                          'Please narrow your search for accurate sorting')
+                    print(data_len)
+                    break
+
+            ret_obj['data'] = ret_data
+            print(ret_data)
 
         return render(request, 'ui/summary.html', ret_obj)
 

@@ -8,8 +8,8 @@ import pandas as pd
 
 # Libraries from this project
 from data import path
+import hp_config as hpc
 from hp_data.exceptions import NoDataError
-
 import hp_data as hpd
 import hp_data.utils as ut
 
@@ -19,54 +19,78 @@ class DataController:
     _loc_fields = {'street', 'postcode', 'city', 'county'}
     _full_data_dir = f'{data_dir}/$<year>'
     _pc_dir = f'{_full_data_dir}/postcodes'
+    _num_data_files = 0
 
     def __init__(self, selectors, cols_to_display=None):
         self._start_time = time.time()
         self._selectors = selectors
-        self._set_years_to_get()
+        #self._set_years_to_get()
         self._cols_to_display = cols_to_display
 
     def read_data(self):
         """Will read the data"""
-        self._data_files_to_read = self._get_data_files()
         t1 = time.time()
-
         all_df = self._read_data_files()
         t2 = time.time()
 
         try:
-            self.data = pd.concat(self._select_data(df) for df in all_df)
-        except ValueError:
-            raise NoDataError("No data for that selection")
-        if len(self.data) == 0:
-            raise NoDataError("No data for that selection")
+            self._num_data_files = 0
+            for ret in all_df:
+                self._num_data_files += 1
+                yield self._select_data(*ret)
+        except ValueError as e:
+            raise NoDataError(f"No data for that selection: {e}")
+        if self._num_data_files == 0:
+            raise NoDataError("No data files found for selection")
         self._end_time = time.time()
 
-        print(f"Time Taken for file find: {t1 - self._start_time}")
         print(f"Time Taken for file read: {t2 - t1}")
         print(f"Time Taken for data splice: {self._end_time - t2}")
 
-    def _set_years_to_get(self):
-        """Will set which years to read from files and which to get from the cache
+    def _select_data(self, df, col_names=[]):
+        """Will select the relevant data from the data files (according to selectors)."""
+        self._num_data_files += 1
+        # Select columns
+        if self._cols_to_display:
+            ret_col_names = [i for i in col_names if i[0] in self._cols_to_display]
+        else:
+            ret_col_names = col_names
 
-        Sets the attributes:
-            - self._years_to_get
-            - self._years_to_read
-            - self._years_from_cache
-        """
-        min_year = self._selectors.get('date_from',
-                                       hpd.DATA_STATS['min_date']).year
-        max_year = self._selectors.get('date_to',
-                                       hpd.DATA_STATS['max_date']).year
+        # Select the data
+        if len(df) > hpc.sort_index_len:
+            df = self._select_with_sort_indices(df)
+        else:
+            df = self._select_with_masks(df)
 
-        self._years_to_get = set(range(min_year, max_year+1))
-        self._years_to_read = self._years_to_get - set(hpd.CACHE_DATA.keys())
-        self._years_to_read = tuple(sorted(self._years_to_read))
-        self._years_from_cache = tuple(self._years_to_get.intersection(hpd.CACHE_DATA.keys()))
-        self._years_from_cache = tuple(sorted(self._years_from_cache))
+        return df, ret_col_names
 
-    def _select_data(self, df):
-        """Will select the relevant data from the data files."""
+    def _select_with_masks(self, df):
+        """Will select with numpy masks -for small dfs- according selectors"""
+        if self._cols_to_display:
+            df = df[self._cols_to_display]
+
+        # Datetime also sorted so can use bin search
+        min_ind, max_ind = self._datetime_selection(df)
+        df = df.iloc[min_ind:max_ind]
+
+        sel = self._selectors
+
+        if 'price_low' in sel:
+            df = df[df['price'] >= sel['price_low']]
+        if 'price_high' in sel:
+            df = df[df['price'] <= sel['price_high']]
+        if 'postcode' in sel:
+            col = 'postcode'
+            df = df[df[col].str.startswith(sel[col].upper())]
+
+        for col in ('city', 'street', 'county'):
+            if col in sel:
+                df = df[df[col].str.startswith(sel[col].lower())]
+
+        return df
+
+    def _select_with_sort_indices(self, df, col_names={}):
+        """Will select the relevant data (according to selectors) with sort indices"""
         t1 = time.time()
         min_ind, max_ind = self._datetime_selection(df)
         inds = set(range(min_ind, max_ind))
@@ -95,32 +119,12 @@ class DataController:
             selection_timings['price'] = time.time() - t1
 
         # Handle single selections
-        for col in ('street', 'city', 'county', 'postcode', 'is_new', 'tenure'):
+        for col in ('street', 'city', 'county', 'postcode'):
             t1 = time.time()
             inds, changed = self._select_from_1_col(df, col, inds)
             if changed:
                 selection_timings[col] = time.time() - t1
                 just_dt = False
-
-        # Handle multiple selections from the same selector
-        for col in ('dwelling_type', ):
-            t1 = time.time()
-            selector_vals = self._selectors.get(col, [])
-            if not selector_vals:
-                continue
-
-            so = df[f'{col}_sort_index'].values
-            new_inds = []
-            for val in selector_vals:
-                if isinstance(val, str) and len(val) < 2:
-                    continue
-                just_dt = False
-                so = df[f'{col}_sort_index'].values
-                first_ind, last_ind = ut.find_in_data(df[col].values, so, val)
-                if first_ind != last_ind:
-                    new_inds.extend(so[first_ind: last_ind])
-            inds = inds.intersection(new_inds)
-            selection_timings[col] = time.time() - t1
 
         # Indexing the data to return
         t1 = time.time()
@@ -128,12 +132,13 @@ class DataController:
             df = df.iloc[min_ind:max_ind]
         else:
             df = df.iloc[sorted(inds)]
+
         selection_timings['splicing'] = time.time() - t1
 
         # Print timings for each selection
-        print("Time take to select:")
-        for i in selection_timings:
-            print(f"    - '{i}': {selection_timings[i]:.3f}")
+        #print("Time take to select:")
+        #for i in selection_timings:
+        #    print(f"    - '{i}': {selection_timings[i]:.3f}")
 
         if self._cols_to_display:
             return df.loc[:, self._cols_to_display]
@@ -188,46 +193,42 @@ class DataController:
 
         return first_ind, last_ind
 
-    def _get_data_files(self):
-        """Will find which data files to read"""
-
-        # Get data from the postcode files
-        if any(i in self._selectors for i in self._loc_fields):
-            data_filenames = self._get_loc_files()
-
-        # Read the standard feather files
-        else:
-            data_filenames = [Path(self._full_data_dir.replace('$<year>', str(y))) / f'pp-{y}.feather'
-                              for y in self._years_to_read]
-
-        return [i for i in data_filenames if i.is_file()]
-
     def _read_data_files(self):
         """Will read all data files as a dataframe via 'read_dataset' from pyarrow"""
         cols = ['price', 'date_transfer', 'postcode', 'dwelling_type', 'is_new',
                 'tenure', 'paon', 'street', 'city', 'county']
 
-        excluders = {'date_from', 'date_to', 'price_high', 'price_low'}
+        excluders = {'date_from', 'date_to', 'price_high', 'price_low',
+                     'tenure', 'dwelling_type', 'is_new'}
         for sel in self._selectors:
             if sel not in excluders:
                 cols += [f'{sel}_sort_index']
+
         if 'price_low' in self._selectors or 'price_high' in self._selectors:
             cols += ['price_sort_index']
 
-        all_df = [ft.FeatherDataset([fn]).read_pandas(columns=cols)
-              for fn in self._data_files_to_read]
-        for yr in self._years_from_cache:
-            all_df.append(hpd.CACHE_DATA[yr])
+        sel = self._selectors
 
-        return all_df
+        # Select years
+        min_year = self._selectors.get('date_from',
+                                       hpd.DATA_STATS['min_date']).year
+        max_year = self._selectors.get('date_to',
+                                       hpd.DATA_STATS['max_date']).year
+        years = list(range(min_year, max_year+1))
+        # Select postcodes, is_new, dwelling_type and tenure
+        postcodes = self._get_postcodes_to_read()
+        is_new = self._selectors.get('is_new', None)
+        dwelling_type = self._selectors.get('dwelling_type', None)
+        tenure = self._selectors.get('tenure', None)
 
-    def _get_loc_files(self):
-        """Get the data from the postcode files.
+        print(years, postcodes, is_new, dwelling_type, tenure)
+        yield from hpd.cache.yield_items([years, postcodes, is_new, dwelling_type, tenure])
 
-        Args:
-            years_to_read: a list of year numbers to read
-        """
-        years_to_read = list(map(str, self._years_to_read))
+    def _get_postcodes_to_read(self):
+        """Get the data from the postcode files."""
+        loc_cols = ('postcode', 'city', 'street', 'county')
+        if all(j not in self._selectors for j in loc_cols):
+            return None
 
         # Get relevant postcodes
         pcs = set()
@@ -241,7 +242,7 @@ class DataController:
             for loc in maps:
                 if loc in self._selectors:
                     map_ = maps[loc]
-                    loc_selector = self._selectors[loc].title()
+                    loc_selector = self._selectors[loc].lower()
                     keys = {i for i in map_ if i.startswith(loc_selector)}
                     new_pcs = {j for i in keys for j in map_[i]}
                     if len(pcs) == 0:
@@ -250,14 +251,6 @@ class DataController:
                         pcs = pcs.intersection(new_pcs)
                         if len(pcs) == 0:
                             raise NoDataError("No data for that selection")
-
-        # Construct the filenames
-        fns = []
-        for year in years_to_read:
-            for pc in pcs:
-                dir_name = Path(self._pc_dir.replace('$<year>', year))
-                fns.append(dir_name / f'{pc[0].upper()}.feather')
-
-        # Return if they exist
-        return [fn for fn in fns if fn.is_file()]
+        self._pcs_to_read = tuple(pcs)
+        return self._pcs_to_read
 

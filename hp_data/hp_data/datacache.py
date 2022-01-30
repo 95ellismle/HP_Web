@@ -4,6 +4,7 @@ from pathlib import Path
 from pyarrow import feather as ft
 
 from data import path as dt_path
+import hp_config as hpc
 
 
 class DataCache(dict):
@@ -31,12 +32,11 @@ class DataCache(dict):
                     'tenure', 'paon', 'street', 'city', 'county', 'postcode_sort_index',
                     'price_sort_index', 'street_sort_index',
                     'city_sort_index', 'county_sort_index']
-
-    _dwelling_types = ['Detached', 'Semi-Detached', 'Terraced', 'Flat/Maisonette', 'Other']
-    _tenures = ['Freehold', 'Leasehold']
+    _column_names = {2: 'is_new', 3: 'dwelling_type', 4: 'tenure'}
     _mem_usage = 0
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, cache_years=None, *args, **kwargs):
+        self._cache_years = cache_years
         self._create_cache()
         super().__init__(*args, **kwargs)
 
@@ -44,25 +44,86 @@ class DataCache(dict):
         """Will iterate over all files in the data directory and load them into the cache.
         This will create the data structure as seen in the docstr.
         """
-        for year in sorted(dt_path.glob('????')):
+        cache_years = sorted(dt_path.glob('????'))
+        if self._cache_years is not None:
+            self._cache_years = set(self._cache_years)
+            cache_years = (i for i in cache_years if int(i.stem) in self._cache_years)
+
+        rev_dt = {v: k for k, v in hpc.dwelling_type.items()}
+        rev_tn = {v: k for k, v in hpc.tenure.items()}
+
+        # Read the cache files
+        for year in cache_years:
             data = self.setdefault(int(year.stem), {})
             print(year)
 
-            for pc in sorted(year.glob('postcodes/*.feather')):
-                data = data.setdefault(pc.stem, {})
-                Odf = ft.FeatherDataset([pc]).read_pandas(columns=self._cols_to_read)
+            for fp in sorted(year.glob('postcodes/*.feather')):
+                splitter = fp.stem.split('_')
+                pc = splitter[0]
+                for i in splitter[1:]:
+                    v = i.upper()
+                    if v.startswith('IN'):
+                        is_new = bool(int(i[-1]))
+                    elif v.startswith('DT'):
+                        dwelling_type = rev_dt[int(i[2:])]
+                    elif v.startswith('TN'):
+                        tenure = rev_tn[int(i[2:])]
+                try:
+                    d = data.setdefault(pc, {}).setdefault(is_new, {}).setdefault(dwelling_type, {})
+                    d[tenure] = ft.FeatherDataset([fp]).read_pandas()
+                except NameError:
+                    raise SystemExit(f"Filename corrupt: {i}")
 
-                for is_new in (True, False):
-                    data = data.setdefault(is_new, {})
-                    df1 = Odf[Odf['is_new'] == is_new]
+    def yield_items(self,
+                    selectors: list,
+                    data=None,
+                    selector_ind=0,
+                    all_selectors=[]
+                    ):
+        """Will yield the dataframes based on the selections,
+        leaving any selection empty will yield all.
 
-                    for dwelling_type in self._dwelling_types:
-                       data = data.setdefault(dwelling_type, {})
-                       df2 = df1[df1['dwelling_type'] == dwelling_type].drop('is_new', axis=1)
+        Args:
+            selectors: a list/tuple of things to select from the data.
+                       E.g: [2021, None, ['Detached', 'Semi-detached']]
+                       Order is:
+                        [years, postcode, is_new, dwelling_type, tenure]
+        """
+        # Finally yield the data and the column values/names
+        if selector_ind >= len(selectors):
+            yield (data, all_selectors)
+            return
 
-                       for tenure in self._tenures:
-                           new_df = df2[df2['tenure'] == tenure].drop(['tenure', 'dwelling_type'],
-                                                                      axis=1)
-                           self._mem_usage += sys.getsizeof(new_df)
-                           data[tenure] = new_df
+        # Initialisation
+        if data is None:
+            data = self
+            if len(selectors) < 5:
+                if isinstance(selectors, tuple):
+                    selectors = list(selectors)
+                elif not isinstance(selectors, list):
+                    selectors = [selectors]
+                selectors += [None] * (5 - len(selectors))
+            selectors = selectors[:5]
+
+        # Indivual selector init
+        curr_sels = selectors[selector_ind]
+        if curr_sels is None:
+            curr_sels = data.keys()
+        elif not isinstance(curr_sels, (list, tuple)):
+            curr_sels = [curr_sels]
+        else:
+            curr_sels = [sel for sel in curr_sels if sel in data]
+
+        # Selection of data
+        for sel in curr_sels:
+            if sel not in data:
+                continue
+
+            # Add the column names and vals we are iterating over
+            new_sels = all_selectors
+            if selector_ind in self._column_names:
+                new_sels = all_selectors.copy()
+                new_sels.append((self._column_names[selector_ind], sel))
+
+            yield from self.yield_items(selectors, data[sel], selector_ind+1, new_sels)
 
