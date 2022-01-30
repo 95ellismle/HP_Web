@@ -91,3 +91,33 @@ def test_find_in_data():
     t2 = time.time()
     assert {l[i] for i in s[ind1:ind2+1]} == ref
 
+
+def test_huffman_encoding():
+    """Test the huffman encoding of an array"""
+    # test with numbers
+    test_arr = ([1] * 5) + ([2] * 6) + ([1] * 3) + ([6] * 7)
+    huff_arr = utils.huffman(np.array(test_arr))
+    assert huff_arr == ((1, 5), (2, 6), (1, 3), (6, 7))
+
+    test_arr = [1] * 18
+    huff_arr = utils.huffman(np.array(test_arr))
+    assert huff_arr == ((1, 18),)
+
+    test_arr = ([1] * 18) + [2]
+    huff_arr = utils.huffman(np.array(test_arr))
+    assert huff_arr == ((1, 18), (2, 1))
+
+    test_arr = ([1] * 18) + [2, 2, 3, 4]
+    huff_arr = utils.huffman(np.array(test_arr))
+    assert huff_arr == ((1, 18), (2, 2), (3, 1), (4, 1))
+
+    # Test with dates
+    test_arr = ([pd.to_datetime('2021-01-01')] * 18) + ([pd.to_datetime('2021-02-02')]*3)
+    huff_arr = utils.huffman(np.array(test_arr))
+    assert huff_arr == ((pd.to_datetime('2021-01-01'), 18), (pd.to_datetime('2021-02-02'), 3))
+
+    # Test with strs
+    test_arr = (['a'] * 18) + (['b'] * 3) + ['c', 'c']
+    huff_arr = utils.huffman(np.array(test_arr))
+    assert huff_arr == (('a', 18), ('b', 3), ('c', 2))
+

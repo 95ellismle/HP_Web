@@ -50,11 +50,6 @@ class DataController:
     def _select_data(self, df, col_names=[]):
         """Will select the relevant data from the data files (according to selectors)."""
         self._num_data_files += 1
-        # Select columns
-        if self._cols_to_display:
-            ret_col_names = [i for i in col_names if i[0] in self._cols_to_display]
-        else:
-            ret_col_names = col_names
 
         # Select the data
         if len(df) > hpc.sort_index_len:
@@ -62,7 +57,7 @@ class DataController:
         else:
             df = self._select_with_masks(df)
 
-        return df, ret_col_names
+        return df, col_names
 
     def _select_with_masks(self, df):
         """Will select with numpy masks -for small dfs- according selectors"""

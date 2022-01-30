@@ -1,3 +1,7 @@
+import numpy as np
+import pandas as pd
+
+
 def create_trie(data):
     """Will create a trie with values that can be autocompleted in a text field.
 
@@ -96,12 +100,8 @@ def _get_in_sorted_df(self, df, col, sort_col, val):
     Returns:
         An list of indices where the value appears in the dataframe
     """
-    from time import time as t
-
-    t1 = t()
     data = df[col].values
     sort_order = df[sort_col].values
-    t2 = t()
 
 
 def find_end(data, sort_order, val, first_or_last='first', init_low=None, init_upp=None):
@@ -213,3 +213,24 @@ def find_in_data(data, sort_order, val):
                         init_low=first_ind)
 
     return first_ind, last_ind
+
+
+def huffman(arr):
+    """Returns a huffman encoding of the array.
+
+    Args:
+        arr: the array that should be huffman encoded
+    Returns:
+        list(list()) [[val, num_vals], [val1, num_val1], ...]
+    """
+    if len(arr) == 0:
+        return tuple()
+    changes = arr[:-1] != arr[1:]
+    inds = np.arange(1, len(arr))[changes]
+    if len(inds) == 0:
+        return ((arr[0], len(arr)),)
+
+    inds = np.insert(inds, 0, 0)
+    lens_ = np.insert(np.diff(inds), len(inds)-1, len(arr) - inds[-1])
+    return tuple(zip(arr[inds], lens_))
+

@@ -103,18 +103,23 @@ class DataScreen(View):
             data: dict that will store the data to pass to the frontend
         """
         len_df = len(df)
-        #for col in df.columns:
-        #    if df.dtypes[col] == 'category':
-        #        data.setdefault(col, []).extend(list(df[col].cat.codes))
+        for col in df.columns:
+            if df.dtypes[col] == 'category':
+                data.setdefault(col, []).extend(ut.huffman(df[col].cat.codes.values))
 
-        #    elif df.dtypes[col] == 'datetime64[ns]':
-        #        data.setdefault(col, []).extend(df[col].dt.strftime('%Y-%d-%m'))
+            elif df.dtypes[col] == 'datetime64[ns]':
+                ret = [[np.datetime_as_string(i[0]), i[1]]
+                       for i in ut.huffman(df[col].values)]
+                data.setdefault(col, []).extend(ret)
 
-        #    else:
-        #        data.setdefault(col, []).extend(list(df[col]))
+            else:
+                if col in {'price', 'postcode', 'paon', 'street'}:
+                    data.setdefault(col, []).extend(list(df[col].values))
+                else:
+                    data.setdefault(col, []).extend(ut.huffman(df[col].values))
 
-        for col in col_names:
-            data.setdefault(col, []).append([col_names[col], len_df])
+        for col, val in col_names:
+            data.setdefault(col, []).append([val, len_df])
 
         return data, len_df
 
@@ -146,11 +151,9 @@ class DataScreen(View):
                 if data_len > 10000:
                     ret_obj['err_msg'] = ('Only the first 10,000 results are being passed back from the server.'
                                           'Please narrow your search for accurate sorting')
-                    print(data_len)
                     break
 
             ret_obj['data'] = ret_data
-            print(ret_data)
 
         return render(request, 'ui/summary.html', ret_obj)
 

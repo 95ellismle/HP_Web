@@ -11,6 +11,8 @@
 
 <table id="id_summary_table"></table>
 <script>
+	const False=false;
+	const True=true;
 	{% autoescape off %}
 	{% for k, v in data.items %}
 		const {{k}} = {{v}};
