@@ -56,7 +56,6 @@ class DataController:
             df = self._select_with_sort_indices(df)
         else:
             df = self._select_with_masks(df)
-
         return df, col_names
 
     def _select_with_masks(self, df):

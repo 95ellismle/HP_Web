@@ -14,15 +14,20 @@
 	const False=false;
 	const True=true;
 	{% autoescape off %}
-	{% for k, v in data.items %}
-		const {{k}} = {{v}};
-	{% endfor %}
+	const input_data = {
+		{% for k, v in data.items %}
+			'{{k}}': {{v}},
+		{% endfor %}
+	};
 	{% endautoescape %}
 
+	{% if data.length != 0 %}
+	const table_data = decode_huffman(input_data);
 	if (Object.entries(table_data).length !== 0) {
 		let t = new Table(table_data, 50, 'id_summary_table');
 		t.create_table();
 	}
+	{% endif %}
 </script>
 
 

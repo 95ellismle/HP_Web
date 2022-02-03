@@ -36,6 +36,78 @@ const ROW_FUNCS = {'date_transfer': function (val) {
 
 let COLS_TO_SHOW = ['date_transfer', 'price', 'paon', 'street', 'city', 'postcode'];
 
+/* Will decode the data returned from the server
+ *
+ * Args:
+ *		data_dict: the data object
+ * Returns:
+ *		table_data
+ */
+function decode_huffman(data_dict) {
+	let table_data = {'columns': [], 'data': []};
+	let bookkeeping = {};
+	var arr_len = 0;
+	for (const col in data_dict) {
+		table_data['columns'].push(col);
+
+		if (typeof(data_dict[col][0]) == 'object') {
+			var val = data_dict[col][0][0];
+			if (col == 'city') {
+				val = city[val];
+			} else if (col == 'county') {
+				val = county[val];
+			}
+			bookkeeping[col] = [val, data_dict[col][0][1], 1, 1];
+
+		} else {
+			arr_len = data_dict[col].length;
+		}
+	}
+
+	// Add the rows (needs to be in shape [[row0_col0, row0_col1, ...],
+	//									   [row1_col0, row1_col2, ...],
+	//									   ...]
+	for (let row_i=0; row_i<arr_len; row_i++) {
+		let row = [];
+
+		for (const col in data_dict) {
+			if (bookkeeping[col]) {
+				const val = bookkeeping[col][0];
+				const num_vals = bookkeeping[col][1];
+				const ticker = bookkeeping[col][3];
+
+				row.push(val);
+
+				if (ticker >= num_vals) {
+					const ind = bookkeeping[col][2];
+					const tmp = data_dict[col][ind];
+					if (tmp) {
+	    				// set value
+						if (col == 'city') {
+							bookkeeping[col][0] = city[tmp[0]];
+						} else if (col == 'county') {
+							bookkeeping[col][0] = county[tmp[0]];
+						} else {
+							bookkeeping[col][0] = tmp[0];
+						}
+						bookkeeping[col][1] = tmp[1]; // set num of values
+						bookkeeping[col][2] += 1;
+						bookkeeping[col][3] = 1;  // reset ticker
+					}
+				} else {
+					bookkeeping[col][3] += 1;
+				}
+			}
+
+			else {
+				row.push(data_dict[col][row_i]);
+			}
+
+		}
+		table_data['data'].push(row);
+	}
+	return table_data;
+}
 
 /* Will get the order to index an array to sort it
  *
@@ -63,12 +135,20 @@ function get_sort_order(data, ind) {
 }
 
 
+/* Contains logic for creating the table.
+ *
+ * Structure of data should be:
+ *     {'columns': [col1, col2, ...],
+ *      'data': [row1, row2, ...]
+ *     }
+ *
+ */
 class Table {
 	constructor(data, rows, table_id) {
 		this.nrow = rows;
 		this.data = data;
 		this.table_id = table_id;
-		this.cols = this.data['columns'];
+		this.cols = this.data.columns;
 
 		this.cols_to_show = [];
 		this.col_to_ind = {};

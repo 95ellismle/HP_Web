@@ -105,10 +105,10 @@ class DataScreen(View):
         len_df = len(df)
         for col in df.columns:
             if df.dtypes[col] == 'category':
-                data.setdefault(col, []).extend(ut.huffman(df[col].cat.codes.values))
+                data.setdefault(col, []).extend([list(i) for i in ut.huffman(df[col].cat.codes.values) if i])
 
             elif df.dtypes[col] == 'datetime64[ns]':
-                ret = [[np.datetime_as_string(i[0]), i[1]]
+                ret = [[np.datetime_as_string(i[0], 'D'), i[1]]
                        for i in ut.huffman(df[col].values)]
                 data.setdefault(col, []).extend(ret)
 
