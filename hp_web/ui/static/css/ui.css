@@ -36,3 +36,10 @@
 	color: darkred;
 
 }
+
+/*The content right of the sidebar*/
+.sidebar_content {
+	position: absolute;
+	left: 190px;
+    padding: 0.01em 5px;
+}

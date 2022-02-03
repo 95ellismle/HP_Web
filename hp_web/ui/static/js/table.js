@@ -212,6 +212,7 @@ class Table {
  */
 function create_headers(table_obj, obj) {
 	const cols = obj.data['columns'];
+	const thead = document.createElement('thead');
 	const tr = document.createElement('tr');
 
 	for (let i=0; i<obj.cols_to_show.length; i++) {
@@ -225,7 +226,8 @@ function create_headers(table_obj, obj) {
 		th.id = 'th_' + ind;
 		tr.appendChild(th);
 	}
-	table_obj.appendChild(tr);
+	thead.appendChild(tr);
+	table_obj.appendChild(thead);
 };
 
 
