@@ -43,3 +43,35 @@
 	left: 190px;
     padding: 0.01em 5px;
 }
+
+/* Navbar Stuff */
+.navbar-ul {
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  background-color: #fafafa;
+}
+
+.navbar-li {
+  float: left;
+}
+
+.navbar-li .navbar-a {
+  display: block;
+  color: #666;
+  text-align: center;
+  padding: 14px 16px;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.navbar-li .navbar-a:hover:not(.active) {
+  background-color: #ddd;
+}
+
+.navbar-li .navbar-a.active {
+  color: white;
+  background-color: #666;
+}
+

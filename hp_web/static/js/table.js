@@ -1,5 +1,3 @@
-"use strict";
-
 const COL_NAME_MAP = {'date_transfer': 'Transfer Date',
 				   	  'price': 'Price (£)',
 					  'paon': 'House Number',
@@ -137,28 +135,6 @@ function get_sort_order(data, ind) {
 }
 
 
-/* Base class for the table and plot (and any other pages that come in the future) */
-class BasePage {
-	constructor (data, div_id) {
-		this.data = data;
-		this.root_div = div_id;
-		this.div_id = div_id;
-	}
-
-	/* Will show the div */
-	show () {
-		const div = document.getElementById(this.root_div);
-		div.style.display = 'block';
-	}
-
-	/* Will hide the div */
-	hide () {
-		const div = document.getElementById(this.root_div);
-		div.style.display = 'none';
-	}
-}
-
-
 /* Contains logic for creating the table.
  *
  * Structure of data should be:
@@ -167,13 +143,11 @@ class BasePage {
  *     }
  *
  */
-class Table extends BasePage {
-	constructor(data, rows, div_id, table_id) {
-		super(data, div_id);
+class Table {
+	constructor(data, rows, table_id) {
 		this.nrow = rows;
 		this.data = data;
-		this.div_id = table_id;
-		this.root_div = div_id;
+		this.table_id = table_id;
 		this.cols = this.data.columns;
 
 		this.cols_to_show = [];
@@ -196,7 +170,7 @@ class Table extends BasePage {
 	/* Create the table
 	 */
 	create_table() {
-		const table_obj = document.getElementById(this.div_id);
+		const table_obj = document.getElementById(this.table_id);
 		table_obj.innerHTML = '';
 
 		if (Object.entries(this.data).length !== 0) {
@@ -271,180 +245,5 @@ function create_table_row(table_obj, obj, row_i) {
 			tr.appendChild(td);
 		}
 		table_obj.appendChild(tr);
-	}
-}
-
-
-function sum(arr) {
-	let sum = 0;
-	for (let i=0; i<arr.length; i++) {
-		sum += arr[i];
-	} return sum;
-}
-
-/* Will find the std deviation of num in an array */
-function stddev (arr, mean) {
-	std = 0.0;
-	for (let i=0; i<arr.length; i++) {
-		std += (arr[i] - mean)**2
-	}
-	std /= arr.length;
-	return std**0.5;
-}
-
-class Plot extends BasePage {
-	colors = {
-	};
-	/* Will draw the PlotLy plot */
-	plot(x_key, y_key) {
-		this.xData = this.get_data(x_key);
-		this.yData = this.get_data(y_key);
-
-		let group_col_name = 'dwelling_type';
-		this.group_col = this.get_data(group_col_name);
-		this.groupby_col();
-
-		let traces = [];
-		const groups = Object.keys(this.groupby_data);
-		for (let i=0; i<groups.length; i++) {
-			const group_data = this.groupby_data[groups[i]];
-			traces.push(
-				this.create_traces(group_data.x, group_data.y, `Raw ${groups[i]}`,
-								   'markers', 0.3)
-			);
-			const ret = this.rolling_mean(group_data.x, group_data.y);
-			traces.push(
-				this.create_traces(ret[0], ret[1], groups[i], `Rolling ${groups[i]}`)
-			)
-	 	}
-
-
-		const layout = {
-			autosize: true,
-			font: {size: 16},
-			legend: {
-			  font: {
-			    family: 'Arial, sans-serif',
-			    size: 20,
-			    color: 'grey',
-			  }
-			},
-
-		};
-		const config = {responsive: true};
-
-		Plotly.newPlot(this.div_id, traces, layout, config);
-	}
-
-	/* Will create a trace for 1 plot and return the object */
-	create_traces (xdata, ydata, label=null, mode='lines', opacity=1) {
-		let data = {
-			x: [],
-			y: [],
-			type: 'scatter',
-			mode: mode,
-			name: label,
-			opacity: opacity,
-		};
-
-	    data.x = xdata;
-	    data.y = ydata;
-
-		return data;
-	}
-
-	/* Will group data by a column and return an object of form:
-	 *    {group1: {x: [], y: []}, ...}
-	 */
-	groupby_col () {
-		this.groupby_data = {};
-		if (this.groupby_col) {
-			for (let i=0; i<this.group_col.length; i++) {
-				const group_val = this.group_col[i];
-				this.groupby_data[group_val] ??= {'x': [], 'y': []};
-				this.groupby_data[group_val].x.push(this.xData[i]);
-				this.groupby_data[group_val].y.push(this.yData[i]);
-			}
-		}
-	}
-
-	/* Will return x and y data for a 3 Month rolling mean line */
-	rolling_mean (xdata, ydata, month_length=3) {
-		const ret = this.groupby_month(xdata, ydata);
-		console.log(ret);
-		return ret;
-	}
-
-	/* Will group dates by month -func is mean
-	 * xdata should include the dates
-	 * ydata should have the numeric groupable data
-	 *
-	 * Will perform sum, mean, min, max and stddev
-	 */
-	groupby_month(xdata, ydata) {
-		let data = {};
-		let dates = new Set();
-
-		// Aggregate data
-		for (let i=1; i<xdata.length; i++) {
-			let currDate = xdata[i];
-			let dt = new Date(currDate.getFullYear(), currDate.getMonth()).getTime();
-			dates.add(dt);
-
-			if (!(dt in data)) { data[dt] = {'min': Infinity, 'min': null, 'mean': 0, 'count': 0}; }
-
-			const yval = ydata[i];
-			if (yval > data[dt]['min']) {data[dt]['min'] = yval};
-			if (yval < data[dt]['max']) {data[dt]['max'] = yval};
-			data[dt]['sum'] += yval;
-			data[dt]['count'] += 1;
-		}
-
-		// Sort out means
-		for (let i in data) {
-			data[i]['mean'] = data[i]['sum'] / data[i]['count'];
-		}
-
-		// Set the xData and yData
-		const ret_x = Array.from(dates);
-		ret_x.sort(function (a, b) { return a - b; });
-		const ret_y = [];
-		for (let i=0; i<xdata.length; i++) {
-			ret_y.push(data[ret_x[i]]);
-		}
-		return [ret_x, ret_y];
-	}
-
-	/* Parse the plotting series from the data dict */
-	get_data(key) {
-		const col_ind = this.data['columns'].indexOf(key);
-		if (col_ind == -1) {
-			throw('Bad plot dim -x');
-		}
-
-		let data = [];
-
-		// First check the type -if it's a date create a date obj
-		const first_data_item = this.data.data[0][col_ind];
-		let is_date = false;
-		if (typeof(first_data_item) !== 'number') {
-			try {
-				const tmp = new Date(first_data_item);
-				if (tmp.valueOf() === tmp.valueOf()) {
-					is_date = true;
-				}
-			} catch {}
-		}
-
-		// Loop over all items and append to array
-		for (let i=0; i<this.data.data.length; i++) {
-			if (is_date) {
-				data.push(new Date(this.data.data[i][col_ind]));
-			} else {
-				data.push(this.data.data[i][col_ind]);
-			}
-		}
-
-		return data;
 	}
 }

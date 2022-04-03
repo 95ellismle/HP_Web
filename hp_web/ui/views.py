@@ -32,13 +32,16 @@ def fetch_trie(request):
     return JsonResponse(data)
 
 
-class DataScreen(View):
-    """View for the general data screen"""
+class BaseSelectorScreen(View):
+    """A base screen that handles selectors that other screens can inherit from"""
     _str_keys = {'city', 'street', 'postcode', 'county', }
     _checks = {'is_new': 2, 'tenure': 2, 'dwelling_type': 5}
 
     def _create_selectors(self, request):
-        """Will create the selectors that will be sent to the controller to get back data"""
+        """Will create the selectors that will be sent to the controller to get back data
+
+        The selectors are created from the front-end form.
+        """
         selectors = {}
         for key in request.POST:
             if key.startswith('date_'):
@@ -85,6 +88,10 @@ class DataScreen(View):
                 selectors['is_new'] = selectors['is_new'][0] == 'is_new'
 
         return selectors
+
+
+class DataScreen(BaseSelectorScreen):
+    """View for the general data screen"""
 
     def get(self, request):
         """No submissions etc"""
@@ -148,12 +155,11 @@ class DataScreen(View):
                 ret_data, len_ = self._append_to_data(df, col_names, ret_data)
                 data_len += len_
 
-                if data_len > 10000:
-                    ret_obj['err_msg'] = ('Only the first 10,000 results are being passed back from the server.'
+                if data_len > 1e6:
+                    ret_obj['err_msg'] = ('Only the first 1,000,000 results are being passed back from the server.'
                                           'Please narrow your search for accurate sorting')
                     break
 
             ret_obj['data'] = ret_data
 
         return render(request, 'ui/summary.html', ret_obj)
-

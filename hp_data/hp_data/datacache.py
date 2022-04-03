@@ -55,7 +55,6 @@ class DataCache(dict):
         # Read the cache files
         for year in cache_years:
             data = self.setdefault(int(year.stem), {})
-            print(year)
 
             for fp in sorted(year.glob('postcodes/*.feather')):
                 splitter = fp.stem.split('_')

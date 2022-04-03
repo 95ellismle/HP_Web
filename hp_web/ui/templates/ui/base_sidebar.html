@@ -132,12 +132,13 @@
 	<script type="text/javascript" src="{% static 'js/categories.js' %}"></script>
 
 	<!-- Main Body -->
-	<div class="w3-container sidebar_content">
-		<div class="w3-content">
+	<div class="w3-container sidebar_content" style='padding: 0; width: calc(100% - 190px);'>
+		<ul class='navbar-ul' id='navbar'></ul>
+		<div class="w3-content" style="width: 100%">
 			{% block main_content %}
 			{% endblock %}
 		</div>
-		<div class="w3-content">
+		<div class="w3-container">
 			<br>
 			Contains HM Land Registry data © Crown copyright and database right 2021. This data is licensed under the Open Government Licence v3.0.
 		</div>

@@ -1,0 +1,9 @@
+.submit-button {
+	background-color: rgba(0, 255, 0, 0.35);
+	font-weight: 400;
+	padding: 8px 12px;
+}
+
+.my-sidebar {
+	width: 190px;
+}

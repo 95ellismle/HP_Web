@@ -4,13 +4,13 @@ from django.utils import timezone
 
 # Create your models here.
 class Filter(models.Model):
-    postcode = models.CharField(max_length=7)
-    street = models.CharField(max_length=70)
-    city = models.CharField(max_length=70)
-    county = models.CharField(max_length=40)
-    is_new = models.CharField(max_length=14)
-    dwelling_type = models.CharField(max_length=55)
-    tenure = models.CharField(max_length=20)
+    postcode = models.CharField(max_length=8)
+    street = models.CharField(max_length=128)
+    city = models.CharField(max_length=128)
+    county = models.CharField(max_length=64)
+    is_new = models.CharField(max_length=16)
+    dwelling_type = models.CharField(max_length=64)
+    tenure = models.CharField(max_length=32)
     price_low = models.IntegerField()
     price_high = models.IntegerField()
 

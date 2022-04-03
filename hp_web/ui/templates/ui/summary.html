@@ -6,12 +6,27 @@
 {% block main_content %}
 <p class='err_msg'>{{err_msg}}</p>
 
+<style>
+</style>
+
 <script type='text/javascript' src="{% static 'js/table.js' %}"></script>
+<script src='https://cdn.plot.ly/plotly-2.9.0.min.js'></script>
 <link rel="stylesheet" href="{% static 'css/table.css' %}">
 
-<div id="summary_table_div">
-	<table id="id_summary_table"></table>
+<div id="root_container_div" class="w3-container">
+	<div id="content_div">
+		<div id='id_table_div' style='display: none'>
+			<div id="summary_control">
+				<button id="navButtonLeft" class="navButton"><i class='fas fa-arrow-left' style='font-size:36px'></i></button>
+				<button id="navButtonRight" class="navButton" style="float: right"><i class='fas fa-arrow-right' style='font-size:36px'></i></button>
+			</div>
+			<table id="id_summary_table"></table>
+		</div>
+
+		<div id='id_plot_div' style='display: none'><p id='id_plot_explain'></p></div>
+	</div>
 </div>
+
 <script>
 	const False=false;
 	const True=true;
@@ -23,13 +38,110 @@
 	};
 	{% endautoescape %}
 
-	{% if data.length != 0 %}
-	const table_data = decode_huffman(input_data);
-	if (Object.entries(table_data).length !== 0) {
-		let t = new Table(table_data, 50, 'id_summary_table');
-		t.create_table();
+	// Add navbar items
+	const navbar = document.getElementById('navbar');
+	let navbar_obj = {'Table': {}, 'Plot': {}};
+	for (let elm_name in navbar_obj) {
+		const li = document.createElement('li');
+		li.className = 'navbar-li';
+		const a = document.createElement('a');
+		a.className = 'navbar-a';
+		a.innerHTML = elm_name;
+		a.setAttribute('onclick', `switchView('${elm_name}')`);
+
+		li.appendChild(a);
+		navbar.appendChild(li);
+		navbar_obj[elm_name]['a_obj'] = a;
+		navbar_obj[elm_name]['li_obj'] = li;
+
 	}
+	navbar_obj['Table']['a_obj'].className += ' active ';
+
+
+	//////////////////////////////////////////
+	////// Handle Switch Between Pages ///////
+	//////////////////////////////////////////
+	/* Will create the table page in a div
+     * 
+     * Args:
+     *    - div_name: <str> the id of the div to create the table in
+     *    - table_data: <object> the data in the table of the form: {'columns': [...],
+    																 'data': [['col1', 'col2', ...],
+    																		  ['col1', 'col2', ...],
+    																		   ...]}
+						(from `decode_huffman` function)
+	 */
+	function create_table_page(div_name, table_data) {
+		// If we're already on the table page then don't do anything
+		if (window.plot) { window.plot.hide(); }
+
+		if (Object.entries(table_data).length > 0 & table_data['data'].length > 0) {
+			window.table = new Table(table_data, 50, 'id_table_div', 'id_summary_table');
+			window.table.show();
+			window.table.create_table();
+		}
+
+		window.navbarElement = 'table';
+		localStorage.setItem('navbarElement', 'table');
+		navbar_obj['Plot']['a_obj'].className = navbar_obj['Plot']['a_obj'].className.replace(' active ', '');
+		if (navbar_obj['Table']['a_obj'].className.search(' active ') === -1) {
+			navbar_obj['Table']['a_obj'].className += ' active ';
+		}
+	}
+
+	/* Will create the plot page in a div
+     * 
+     * Args:
+     *    - div_name: <str> the id of the div to create the table in
+     *    - table_data: <object> the data in the table of the form: {'columns': [...],
+    																 'data': [['col1', 'col2', ...],
+    																		  ['col1', 'col2', ...],
+    																		   ...]}
+						(from `decode_huffman` function)
+	 */
+	function create_plot_page(div_name, table_data) {
+		if (window.table) { window.table.hide(); }
+
+			
+		if (Object.entries(table_data).length > 0 & table_data['data'].length > 0) {
+			window.plot = new Plot(table_data, 'id_plot_div');
+			window.plot.plot('date_transfer', 'price');
+			window.plot.show();
+		}
+
+		window.navbarElement = 'plot';
+		localStorage.setItem('navbarElement', 'plot');
+		navbar_obj['Table']['a_obj'].className = navbar_obj['Table']['a_obj'].className.replace(' active ', '');
+		if (navbar_obj['Plot']['a_obj'].className.search(' active ') === -1) {
+			navbar_obj['Plot']['a_obj'].className += ' active ';
+		}
+	}
+
+	{% if data.length != 0 %}
+		table_data = decode_huffman(input_data);
+		const NE = localStorage.getItem('navbarElement') || window.navbarElement || 'table';
+		if (NE == 'table') {
+			create_table_page('content_div', table_data);
+		} else if (NE == 'plot') {
+			create_plot_page('content_div', table_data);
+		}
 	{% endif %}
+
+	/* Will switch between the Table View and the Plot View */
+	function switchView(navbar_item) {
+		switch (navbar_item) {
+			case 'Table':
+				create_table_page('content_div', table_data);
+				break;
+			case 'Plot':
+				create_plot_page('content_div', table_data);
+				break;
+			default:
+				console.log(`No case ${navbar_item}`);
+		}
+		window.navbarElement = String(navbar_item).toLowerCase();
+	}
+
 </script>
 
 

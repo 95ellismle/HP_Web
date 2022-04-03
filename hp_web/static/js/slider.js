@@ -5,7 +5,7 @@ window.onload = function(){
 
 let sliderOne = document.getElementById("slider-1");
 let sliderTwo = document.getElementById("slider-2");
-let minGap = 0;
+let minGap = 4;
 let sliderTrack = document.querySelector(".slider-track");
 let sliderMaxValue = document.getElementById("slider-1").max;
 let sliderOneVal = document.getElementById("slider-val-1");
@@ -58,7 +58,7 @@ function slideOne(){
     fillColor();
 
 	// Form value
-	sliderFormLow.value = ret[1];
+	sliderFormLow.value = parseInt(ret[1]);
 }
 
 function slideTwo(){
@@ -72,12 +72,12 @@ function slideTwo(){
     fillColor();
 
 	// Form value
-	sliderFormHigh.value = ret[1];
+	sliderFormHigh.value = parseInt(ret[1]);
 }
 
 function fillColor(){
-    percent1 = (sliderOne.value / sliderMaxValue) * 100;
     percent2 = (sliderTwo.value / sliderMaxValue) * 100;
+    percent1 = (sliderOne.value / sliderMaxValue) * 100;
     sliderTrack.style.background = `linear-gradient(to right, #dadae5 ${percent1}% , #3264fe ${percent1}% , #3264fe ${percent2}%, #dadae5 ${percent2}%)`;
 }
 
@@ -85,24 +85,22 @@ function fillColor(){
  * Will set the sliders from the form data that has been submitted
 */
 function setSlidersFromForm(form_data) {
-	// Set slider 1
-	if (form_data['price_low']) {
-		var val = (form_data['price_low'] / maxVal) * sliderMaxValue;
-		val = parseInt(val);
-		console.log(val);
-		sliderOne.value = val;
-		val = readableNumber(form_data['price_low']);
-		sliderOneVal.innerHTML = val;
-	}
-
 	// Set slider 2
 	if (form_data['price_high']) {
 		val = (form_data['price_high'] / maxVal) * sliderMaxValue;
 		val = parseInt(val);
-		console.log(val);
 		sliderTwo.value = val;
 		val = readableNumber(form_data['price_high']);
 		sliderTwoVal.innerHTML = val;
+	}
+
+	// Set slider 1
+	if (form_data['price_low']) {
+		var val = (form_data['price_low'] / maxVal) * sliderMaxValue;
+		val = parseInt(val);
+		sliderOne.value = val;
+		val = readableNumber(form_data['price_low']);
+		sliderOneVal.innerHTML = val;
 	}
 
 	fillColor();

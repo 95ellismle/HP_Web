@@ -42,7 +42,6 @@ if do_test == 'True':
 else:
     cache_years = os.environ.get('CACHE_YEARS', None)
 
-#cache_years = [2021]
 
 cache = dc.DataCache(cache_years)
 

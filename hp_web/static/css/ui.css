@@ -37,15 +37,9 @@
 
 }
 
-.tableFixHead thead th {
-  position: sticky;
-  top: 0;
-}
-th,
-td {
-  padding: 8px 16px;
-  border: 1px solid #ccc;
-}
-th {
-  background: #eee;
+/*The content right of the sidebar*/
+.sidebar_content {
+	position: absolute;
+	left: 190px;
+    padding: 0.01em 5px;
 }
