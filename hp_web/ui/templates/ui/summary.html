@@ -11,15 +11,12 @@
 
 <script type='text/javascript' src="{% static 'js/table.js' %}"></script>
 <script src='https://cdn.plot.ly/plotly-2.9.0.min.js'></script>
+
 <link rel="stylesheet" href="{% static 'css/table.css' %}">
 
 <div id="root_container_div" class="w3-container">
 	<div id="content_div">
 		<div id='id_table_div' style='display: none'>
-			<div id="summary_control">
-				<button id="navButtonLeft" class="navButton"><i class='fas fa-arrow-left' style='font-size:36px'></i></button>
-				<button id="navButtonRight" class="navButton" style="float: right"><i class='fas fa-arrow-right' style='font-size:36px'></i></button>
-			</div>
 			<table id="id_summary_table"></table>
 		</div>
 
@@ -28,6 +25,9 @@
 </div>
 
 <script>
+	//$.getJSON('https://api.ipify.org?format=jsonp&callback=?', function(data) {
+	//	console.log(data);
+	//});
 	const False=false;
 	const True=true;
 	{% autoescape off %}

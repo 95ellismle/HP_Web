@@ -37,10 +37,10 @@ input[type="range"]::-webkit-slider-thumb{
     border-radius: 40%;
 }
 #slider-1::-webkit-slider-thumb {
-	background-color: #ef5040;
+	background-color: #3264fe;/*#ef5040;*/
 }
 #slider-2::-webkit-slider-thumb {
-	background-color: #50bf40;
+	background-color: #3264fe; /* #50bf40;*/
 }
 input[type="range"]::-moz-range-thumb{
     -webkit-appearance: none;

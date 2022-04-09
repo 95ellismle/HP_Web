@@ -6,9 +6,9 @@
 	<link rel="stylesheet" href="{% static 'css/sidebar.css' %}">
 
 	<!-- Sidebar -->
-	<div class="w3-sidebar w3-black w3-bar-block my-sidebar">
+	<div class="w3-sidebar w3-bar-block my-sidebar">
 		<form method="POST" class="post-form">{% csrf_token %}
-			<input type="submit" class="w3-btn w3-ripple w3-right submit-button" style="margin-bottom: 0;">
+			<input type="submit" class="w3-btn w3-ripple w3-right submit-button" style="margin-bottom: 0; margin-right: 5px; margin-top: 5px;">
 
 			<!-- Postcode -->
 			<script>
@@ -47,8 +47,8 @@
 			<input style="display: none" id="id_price_low" name="price_low" type="number">
 			<input style="display: none" id="id_price_high" name="price_high" type="number">
 			<div class="w3-bar-item">
-				<span style="float: left; color: #ef5040;"><b id="slider-val-1">0</b></span> 
-				<span style="float:right; color: #50bf40;"><b id="slider-val-2">>2.5m</b></span>
+				<span style="float: left; color: #fff;/*ef5040;*/"><b id="slider-val-1">0</b></span> 
+				<span style="float:right; color: #fff;/*50bf40;*/"><b id="slider-val-2">>2.5m</b></span>
 			</div>
 			<br>
 
@@ -120,7 +120,7 @@
 			<input class="w3-check" type="checkbox" name="tenure_checks" value="Leasehold" style="margin-left: 15px" checked
 				   onchange="set_form_check_value('tenure')">
 			<label>Leasehold</label>
-			<input style="display: none" type="text" id="id_tenure" name="tenure" value="Freehold,Leashold">
+			<input style="display: none" type="text" id="id_tenure" name="tenure" value="Freehold,Leasehold">
 		</form>
 	</div>
 

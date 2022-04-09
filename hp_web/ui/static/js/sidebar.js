@@ -19,7 +19,7 @@ function populate_fields(field_data) {
 	const check_names = ['is_new', 'dwelling_type', 'tenure'];
 	for (i in check_names) {
 		const check_name = check_names[i];
-		if (form_data[check_name] || form_data[check_name] == '') {
+		if (field_data[check_name] || field_data[check_name] == '') {
 			set_checkboxes_from_value(check_name+'_checks', field_data[check_name]);
 			set_form_check_value(check_name);  // To ensure we don't revert to default next time
 		}
@@ -41,6 +41,7 @@ function set_checkboxes_from_value(name, boxes_to_check) {
 	for (let i=0; i<boxes.length; i++) { box_vals[boxes[i].value] = false; }
 	// Set the boxes that should be true to true
 	for (let i=0; i<split_vals.length; i++) { box_vals[split_vals[i]] = true; }
+	console.log(box_vals);
 
 	// Set the boxes
 	for (let i=0; i<boxes.length; i++) { boxes[i].checked = box_vals[boxes[i].value]; }

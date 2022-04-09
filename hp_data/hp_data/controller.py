@@ -63,7 +63,7 @@ class DataController:
         if self._cols_to_display:
             df = df[self._cols_to_display]
 
-        # Datetime also sorted so can use bin search
+        # Datetime also sorted so can use bin search with a splice
         min_ind, max_ind = self._datetime_selection(df)
         df = df.iloc[min_ind:max_ind]
 

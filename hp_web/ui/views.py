@@ -134,6 +134,7 @@ class DataScreen(BaseSelectorScreen):
         """After submitting form"""
         form = FilterForm(request.POST)
         form_data = {f: request.POST[f] for f in form.fields}
+        print(form_data)
         ret_obj = {'form': form, 'form_data': form_data, 'err_msg': ''}
 
         if form.is_valid():

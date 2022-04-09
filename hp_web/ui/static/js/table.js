@@ -293,7 +293,25 @@ function stddev (arr, mean) {
 }
 
 class Plot extends BasePage {
+
+	/*
+    '#1f77b4',  # muted blue
+    '#ff7f0e',  # safety orange
+    '#2ca02c',  # cooked asparagus green
+    '#d62728',  # brick red
+    '#9467bd',  # muted purple
+    '#8c564b',  # chestnut brown
+    '#e377c2',  # raspberry yogurt pink
+    '#7f7f7f',  # middle gray
+    '#bcbd22',  # curry yellow-green
+    '#17becf'   # blue-teal
+	*/
 	colors = {
+		'Detached': '#1f77b4',
+		'Semi-Detached': '#ff7f0e',
+		'Terraced': '#2ca02c',
+		'Flat/Maisonette': '#d62728',
+		'Other': '#9467bd',
 	};
 	/* Will draw the PlotLy plot */
 	plot(x_key, y_key) {
@@ -308,13 +326,14 @@ class Plot extends BasePage {
 		const groups = Object.keys(this.groupby_data);
 		for (let i=0; i<groups.length; i++) {
 			const group_data = this.groupby_data[groups[i]];
+			//traces.push(
+			//	this.create_traces(group_data.x, group_data.y, groups[i],
+			//					   'trace', 'markers', 0.5, false)
+			//);
+
+			const ret = this.rolling_mean(group_data.x, group_data.y, 3);
 			traces.push(
-				this.create_traces(group_data.x, group_data.y, `Raw ${groups[i]}`,
-								   'markers', 0.3)
-			);
-			const ret = this.rolling_mean(group_data.x, group_data.y);
-			traces.push(
-				this.create_traces(ret[0], ret[1], groups[i], `Rolling ${groups[i]}`)
+				this.create_traces(ret[0], ret[1], groups[i], groups[i], true)
 			)
 	 	}
 
@@ -337,7 +356,7 @@ class Plot extends BasePage {
 	}
 
 	/* Will create a trace for 1 plot and return the object */
-	create_traces (xdata, ydata, label=null, mode='lines', opacity=1) {
+	create_traces (xdata, ydata, group, label='', mode='lines', opacity=1, visible=true) {
 		let data = {
 			x: [],
 			y: [],
@@ -345,6 +364,10 @@ class Plot extends BasePage {
 			mode: mode,
 			name: label,
 			opacity: opacity,
+			marker: {
+				color: this.colors[group],
+			},
+			visible: visible,
 		};
 
 	    data.x = xdata;
@@ -369,10 +392,24 @@ class Plot extends BasePage {
 	}
 
 	/* Will return x and y data for a 3 Month rolling mean line */
-	rolling_mean (xdata, ydata, month_length=3) {
+	rolling_mean (xdata, ydata, month_length=6) {
 		const ret = this.groupby_month(xdata, ydata);
-		console.log(ret);
-		return ret;
+		ydata = [];
+		xdata = [];
+
+		for (let i=month_length; i<ret[0].length; i++) {
+			let x = 0;
+			let y = 0;
+			let ycount = 0;
+			for (let j=i-month_length; j<i; j++) {
+				x += ret[0][j].valueOf();
+				y += ret[1][j]['sum'];
+				ycount += ret[1][j]['count'];
+			}
+			xdata.push(new Date(parseInt(x/month_length)));
+			ydata.push(y/ycount);
+		}
+		return [xdata, ydata];
 	}
 
 	/* Will group dates by month -func is mean
@@ -391,7 +428,7 @@ class Plot extends BasePage {
 			let dt = new Date(currDate.getFullYear(), currDate.getMonth()).getTime();
 			dates.add(dt);
 
-			if (!(dt in data)) { data[dt] = {'min': Infinity, 'min': null, 'mean': 0, 'count': 0}; }
+			if (!(dt in data)) { data[dt] = {'min': Infinity, 'min': null, 'sum': 0, 'mean': 0, 'count': 0}; }
 
 			const yval = ydata[i];
 			if (yval > data[dt]['min']) {data[dt]['min'] = yval};

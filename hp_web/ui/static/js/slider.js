@@ -32,7 +32,7 @@ function createDisplayVal(val) {
 */
 function readableNumber(dispVal) {
 	if (dispVal >= 2.5e6) {
-		return ">2.5m"
+		return "2.5m+"
 	}
 
 	if ((dispVal >= 1e3) & (dispVal < 1e6)) {
@@ -78,7 +78,7 @@ function slideTwo(){
 function fillColor(){
     percent2 = (sliderTwo.value / sliderMaxValue) * 100;
     percent1 = (sliderOne.value / sliderMaxValue) * 100;
-    sliderTrack.style.background = `linear-gradient(to right, #dadae5 ${percent1}% , #3264fe ${percent1}% , #3264fe ${percent2}%, #dadae5 ${percent2}%)`;
+    sliderTrack.style.background = `linear-gradient(to right, #eedae5 ${percent1}% , #3264fe ${percent1}% , #3264fe ${percent2}%, #dadae5 ${percent2}%)`;
 }
 
 /*
