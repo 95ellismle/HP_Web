@@ -76,9 +76,15 @@
 		if (window.plot) { window.plot.hide(); }
 
 		if (Object.entries(table_data).length > 0 & table_data['data'].length > 0) {
-			window.table = new Table(table_data, 50, 'id_table_div', 'id_summary_table');
+			window.table = new Table(table_data, 'id_table_div', 'id_summary_table');
 			window.table.show();
 			window.table.create_table();
+			/* Add more to table on scroll down */
+			window.addEventListener("scroll", function() {
+				if (percentageScrolled() > 0.9) {
+					window.table.draw_next_N_rows(2);
+				}
+			})
 		}
 
 		window.navbarElement = 'table';

@@ -26,17 +26,22 @@ const ROW_FUNCS = {'date_transfer': function (val) {
 				   },
 				   'paon': blank_func,
 				   'street': blank_func,
-				   'city': blank_func,
+				   'city': blank_func, //function (val) {
+				//	   return val.charAt(0).toUpperCase() + val.slice(1);
+				//   },
 				   'county': blank_func,
 				   'postcode': blank_func,
-				   'dwelling_type': blank_func,
+				   'dwelling_type': function (val) {
+					   return val.toLowerCase();
+				   },
 				   'is_new': function (val) {
 						return new_map[val];
 				   },
 				   'tenure': blank_func
 };
 
-let COLS_TO_SHOW = ['date_transfer', 'price', 'paon', 'street', 'city', 'postcode'];
+let COLS_TO_SHOW = ['date_transfer', 'price', 'paon', 'street', 'city',
+					'postcode', 'dwelling_type'];
 
 /* Will decode the data returned from the server
  *
@@ -158,6 +163,20 @@ class BasePage {
 	}
 }
 
+/* Get the height of the entire document */
+function getDocHeight() {
+    var document_ = document;
+    return Math.max(
+        document_.documentElement.scrollHeight,
+        document_.body.clientHeight
+    ) - window.innerHeight
+}
+
+/* Determine how much of the page the user has scrolled down */
+function percentageScrolled() {
+	return window.pageYOffset / getDocHeight();
+}
+
 
 /* Contains logic for creating the table.
  *
@@ -168,9 +187,9 @@ class BasePage {
  *
  */
 class Table extends BasePage {
-	constructor(data, rows, div_id, table_id) {
+	constructor(data, div_id, table_id) {
 		super(data, div_id);
-		this.nrow = rows;
+		this.nrow = 50;
 		this.data = data;
 		this.div_id = table_id;
 		this.root_div = div_id;
@@ -229,6 +248,20 @@ class Table extends BasePage {
 			} else {
 				elm.innerHTML = elm.innerText.slice(0, -1) + '&#9660;'
 			}
+		}
+	}
+
+	/* Will the next N rows of data to the table */
+	draw_next_N_rows(N=50) {
+		const data_len = this.data.data.length;
+		const num_rows = Math.min(data_len - this.nrow, N);
+		const table_obj = document.getElementById(this.div_id);
+		const end_rows = this.nrow + num_rows;
+
+		for (let i=this.nrow; i<end_rows; i++) {
+			const row_i = this.row_display_order[i];
+			create_table_row(table_obj, this, row_i);
+			this.nrow += 1;
 		}
 	}
 }

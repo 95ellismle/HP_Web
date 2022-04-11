@@ -92,6 +92,11 @@ class BaseSelectorScreen(View):
 
 class DataScreen(BaseSelectorScreen):
     """View for the general data screen"""
+    _max_data_len = None
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._max_data_len = int(1e5)
+
 
     def get(self, request):
         """No submissions etc"""
@@ -109,7 +114,15 @@ class DataScreen(BaseSelectorScreen):
             col_names: The names of extra columns all with the same value
             data: dict that will store the data to pass to the frontend
         """
-        len_df = len(df)
+        self._data_len += len(df)
+        if self._data_len > self._max_data_len:
+            remainder = self._data_len - self._max_data_len
+            if remainder > len(df):
+                return data
+            else:
+                df = df.iloc[:remainder]
+
+
         for col in df.columns:
             if df.dtypes[col] == 'category':
                 data.setdefault(col, []).extend([list(i) for i in ut.huffman(df[col].cat.codes.values) if i])
@@ -126,9 +139,9 @@ class DataScreen(BaseSelectorScreen):
                     data.setdefault(col, []).extend(ut.huffman(df[col].values))
 
         for col, val in col_names:
-            data.setdefault(col, []).append([val, len_df])
+            data.setdefault(col, []).append([val, len(df)])
 
-        return data, len_df
+        return data
 
     def post(self, request):
         """After submitting form"""
@@ -152,13 +165,13 @@ class DataScreen(BaseSelectorScreen):
             # Now actually read the data (first 10,000 lines)
             data_len = 0
             ret_data = {}
+            self._data_len = 0
             for df, col_names in data:
-                ret_data, len_ = self._append_to_data(df, col_names, ret_data)
-                data_len += len_
+                ret_data = self._append_to_data(df, col_names, ret_data)
 
-                if data_len > 1e6:
-                    ret_obj['err_msg'] = ('Only the first 1,000,000 results are being passed back from the server.'
-                                          'Please narrow your search for accurate sorting')
+                if self._data_len > self._max_data_len:
+                    ret_obj['err_msg'] = (f'Only the first {self._max_data_len:,} results are being passed back from the server.'
+                                          f'Please narrow your search to see all data.')
                     break
 
             ret_obj['data'] = ret_data
