@@ -42,6 +42,8 @@ if do_test == 'True':
 else:
     cache_years = os.environ.get('CACHE_YEARS', None)
 
+if os.environ.get('SKIP_CACHE', False):
+    cache_years = []
 
 cache = dc.DataCache(cache_years)
 

@@ -1,4 +1,6 @@
 """Will store the datacache object. This stores the data in a very searchable way -hopefully speeding up the app"""
+from concurrent.futures import ThreadPoolExecutor
+import logging
 import sys
 from pathlib import Path
 from pyarrow import feather as ft
@@ -40,6 +42,30 @@ class DataCache(dict):
         self._create_cache()
         super().__init__(*args, **kwargs)
 
+    def _add_cache_year(self, year):
+        """Will add a single year to the cache"""
+        data = self.setdefault(int(year.stem), {})
+
+        for fp in sorted(year.glob('postcodes/*.feather')):
+            splitter = fp.stem.split('_')
+            pc = splitter[0]
+            for i in splitter[1:]:
+                v = i.upper()
+                if v.startswith('IN'):
+                    is_new = bool(int(i[-1]))
+                elif v.startswith('DT'):
+                    dwelling_type = self.rev_dt[int(i[2:])]
+                elif v.startswith('TN'):
+                    tenure = self.rev_tn[int(i[2:])]
+            try:
+                d = data.setdefault(pc, {}).setdefault(is_new, {}).setdefault(dwelling_type, {})
+                d[tenure] = ft.FeatherDataset([fp]).read_pandas()
+                self._mem_usage += d[tenure].memory_usage().sum() / 1048576
+            except NameError:
+                raise SystemExit(f"Filename corrupt: {i}")
+
+        print(f'Read cache year: {year}')
+
     def _create_cache(self):
         """Will iterate over all files in the data directory and load them into the cache.
         This will create the data structure as seen in the docstr.
@@ -49,29 +75,14 @@ class DataCache(dict):
             self._cache_years = set(self._cache_years)
             cache_years = (i for i in cache_years if int(i.stem) in self._cache_years)
 
-        rev_dt = {v: k for k, v in hpc.dwelling_type.items()}
-        rev_tn = {v: k for k, v in hpc.tenure.items()}
+        self.rev_dt = {v: k for k, v in hpc.dwelling_type.items()}
+        self.rev_tn = {v: k for k, v in hpc.tenure.items()}
 
         # Read the cache files
-        for year in cache_years:
-            data = self.setdefault(int(year.stem), {})
+        with ThreadPoolExecutor(4) as executor:
+            executor.map(self._add_cache_year, cache_years)
 
-            for fp in sorted(year.glob('postcodes/*.feather')):
-                splitter = fp.stem.split('_')
-                pc = splitter[0]
-                for i in splitter[1:]:
-                    v = i.upper()
-                    if v.startswith('IN'):
-                        is_new = bool(int(i[-1]))
-                    elif v.startswith('DT'):
-                        dwelling_type = rev_dt[int(i[2:])]
-                    elif v.startswith('TN'):
-                        tenure = rev_tn[int(i[2:])]
-                try:
-                    d = data.setdefault(pc, {}).setdefault(is_new, {}).setdefault(dwelling_type, {})
-                    d[tenure] = ft.FeatherDataset([fp]).read_pandas()
-                except NameError:
-                    raise SystemExit(f"Filename corrupt: {i}")
+        print(f"Finished reading cache, memory used: {self._mem_usage}Mb")
 
     def yield_items(self,
                     selectors: list,

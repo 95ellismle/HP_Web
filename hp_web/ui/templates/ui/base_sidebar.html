@@ -21,6 +21,10 @@
 			<input class="w3-bar-item w3-input mtext-field" type="text" name="postcode" id="id_postcode" maxlength="7"
 				   autocomplete="chrome-off" oninput="remove_spaces('id_postcode');">
 
+			<!-- House Number/Name -->
+			<label class="w3-bar-item"><b>House Num/Name</b></label>
+			<input class="w3-bar-item w3-input mtext-field" type="text" name="paon" id="id_paon" maxlength="128">
+			
 			<!-- Street -->
 			<label class="w3-bar-item"><b>Street</b></label>
 			<input class="w3-bar-item w3-input mtext-field" type="text" name="street" id="id_street" maxlength="70"
@@ -121,6 +125,7 @@
 				   onchange="set_form_check_value('tenure')">
 			<label>Leasehold</label>
 			<input style="display: none" type="text" id="id_tenure" name="tenure" value="Freehold,Leasehold">
+			<input style="display: none" type="text" id="id_IP" name="IP" value="">
 		</form>
 	</div>
 
@@ -144,6 +149,12 @@
 		</div>
 	</div>
 
+	<script>
+		// Get user IP
+		var IP = $.getJSON('https://api.ipify.org?format=jsonp&callback=?', function(data) {
+			document.getElementById('id_IP').value = data['ip'];
+		});
+	</script>
 
 {% endblock %}
 

@@ -77,7 +77,7 @@ class DataController:
             col = 'postcode'
             df = df[df[col].str.startswith(sel[col].upper())]
 
-        for col in ('city', 'street', 'county'):
+        for col in ('paon', 'street', 'city', 'county'):
             if col in sel:
                 df = df[df[col].str.startswith(sel[col].lower())]
 
@@ -113,7 +113,7 @@ class DataController:
             selection_timings['price'] = time.time() - t1
 
         # Handle single selections
-        for col in ('street', 'city', 'county', 'postcode'):
+        for col in ('paon', 'street', 'city', 'county', 'postcode'):
             t1 = time.time()
             inds, changed = self._select_from_1_col(df, col, inds)
             if changed:

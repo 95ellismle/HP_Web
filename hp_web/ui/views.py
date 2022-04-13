@@ -7,11 +7,13 @@ import json
 import os
 import numpy as np
 import pandas as pd
+import time
 import yaml
 
 import hp_data as hpd
 
 from .forms import FilterForm
+from . import orm
 from hp_data import controller as cnt
 from hp_data import utils as ut
 from hp_data.controller import NoDataError
@@ -34,7 +36,7 @@ def fetch_trie(request):
 
 class BaseSelectorScreen(View):
     """A base screen that handles selectors that other screens can inherit from"""
-    _str_keys = {'city', 'street', 'postcode', 'county', }
+    _str_keys = {'city', 'street', 'postcode', 'county', 'paon'}
     _checks = {'is_new': 2, 'tenure': 2, 'dwelling_type': 5}
 
     def _create_selectors(self, request):
@@ -147,7 +149,6 @@ class DataScreen(BaseSelectorScreen):
         """After submitting form"""
         form = FilterForm(request.POST)
         form_data = {f: request.POST[f] for f in form.fields}
-        print(form_data)
         ret_obj = {'form': form, 'form_data': form_data, 'err_msg': ''}
 
         if form.is_valid():
@@ -166,6 +167,8 @@ class DataScreen(BaseSelectorScreen):
             data_len = 0
             ret_data = {}
             self._data_len = 0
+
+            t1 = time.time()
             for df, col_names in data:
                 ret_data = self._append_to_data(df, col_names, ret_data)
 
@@ -173,7 +176,9 @@ class DataScreen(BaseSelectorScreen):
                     ret_obj['err_msg'] = (f'Only the first {self._max_data_len:,} results are being passed back from the server.'
                                           f'Please narrow your search to see all data.')
                     break
-
             ret_obj['data'] = ret_data
+            data_retreival_time = time.time() - t1
+
+            orm.record_usage_stats(selectors, request.POST.get('IP'), data_retreival_time)
 
         return render(request, 'ui/summary.html', ret_obj)

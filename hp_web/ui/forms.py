@@ -49,7 +49,7 @@ class FilterForm(forms.ModelForm):
         fields = ('postcode', 'street', 'city',
                   'county', 'price_low', 'price_high',
                   'date_from', 'date_to', 'dwelling_type',
-                  'is_new', 'tenure',)
+                  'is_new', 'tenure', 'paon')
 
     def __init__(self, *args, **kwargs):
         """Set all fields to not-required"""
