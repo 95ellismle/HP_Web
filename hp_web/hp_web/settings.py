@@ -21,12 +21,14 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/4.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-=tjxgrqm2i-f#mlh^l*l4^o(g_w7&bwpygw!efd(i3l-e*izzs'
+with open(BASE_DIR / 'secret_key.key', 'r') as f:
+    SECRET_KEY = f.read()
+#SECRET_KEY = 'django-insecure-=tjxgrqm2i-f#mlh^l*l4^o(g_w7&bwpygw!efd(i3l-e*izzs'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['localhost', '127.0.0.1']
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'what-did-they-pay.co.uk']
 
 
 # Application definition
@@ -124,3 +126,5 @@ STATIC_ROOT = Path(BASE_DIR) / 'static'
 # https://docs.djangoproject.com/en/4.0/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+CSRF_TRUSTED_ORIGINS = ['https://*.what-did-they-pay.co.uk']

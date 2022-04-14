@@ -12,6 +12,8 @@ match sys.argv[-1]:
         os.environ['SKIP_CACHE'] = '1'
     case 'shell':
         os.environ['SKIP_CACHE'] = '1'
+    case 'collectstatic':
+        os.environ['SKIP_CACHE'] = '1'
 
 # Do testing if required
 if '-t' in sys.argv:
