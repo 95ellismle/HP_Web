@@ -18,7 +18,7 @@ handler.setFormatter(formatter)
 log.addHandler(handler)
 
 
-dwelling_type = {name: i for i, name in enumerate(['Detached', 'Semi-Detached', 'Terraced', 'Flat/Maisonette', 'Other'])}
+dwelling_type = {name: i for i, name in enumerate(['Residential', 'Commercial'])}
 tenure = {'Freehold': 0, 'Leasehold': 1}
 
 sort_index_len = 2500

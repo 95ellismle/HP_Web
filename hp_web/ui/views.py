@@ -158,8 +158,8 @@ class DataScreen(BaseSelectorScreen):
                 cont = cnt.DataController(selectors, ['date_transfer', 'price', 'paon', 'street',
                                                       'city', 'county', 'postcode',])
                 data = cont.read_data()
-            except NoDataError as e:
-                ret_obj['err_msg'] = 'No data for current selection, try changing fields in the sidebar'
+            except Exception as e:
+                ret_obj['err_msg'] = 'No data for current selection, try a different search'
                 print('Exception: ', e)
                 return render(request, 'ui/summary.html', ret_obj)
 
@@ -169,13 +169,19 @@ class DataScreen(BaseSelectorScreen):
             self._data_len = 0
 
             t1 = time.time()
-            for df, col_names in data:
-                ret_data = self._append_to_data(df, col_names, ret_data)
+            try:
+                for df, col_names in data:
+                    ret_data = self._append_to_data(df, col_names, ret_data)
 
-                if self._data_len > self._max_data_len:
-                    ret_obj['err_msg'] = (f'Only the first {self._max_data_len:,} results are being passed back from the server.'
-                                          f'Please narrow your search to see all data.')
-                    break
+                    if self._data_len > self._max_data_len:
+                        ret_obj['err_msg'] = (f'Only the first {self._max_data_len:,} results are being passed back from the server.'
+                                              f'Please narrow your search to see all data.')
+                        break
+            except Exception as e:
+                ret_obj['err_msg'] = 'No data for current selection, try a different search'
+                print('Exception: ', e)
+                return render(request, 'ui/summary.html', ret_obj)
+
             ret_obj['data'] = ret_data
             data_retreival_time = time.time() - t1
 

@@ -26,17 +26,19 @@ class DataController:
         self._selectors = selectors
         #self._set_years_to_get()
         self._cols_to_display = cols_to_display
+        print(f'{selectors=}')
 
     def read_data(self):
         """Will read the data"""
         t1 = time.time()
         all_df = self._read_data_files()
         t2 = time.time()
+        all_df = list(all_df)
+        print(f"BOB, {all_df}")
 
         try:
             self._num_data_files = 0
             for ret in all_df:
-                self._num_data_files += 1
                 yield self._select_data(*ret)
         except ValueError as e:
             raise NoDataError(f"No data for that selection: {e}")
@@ -49,13 +51,13 @@ class DataController:
 
     def _select_data(self, df, col_names=[]):
         """Will select the relevant data from the data files (according to selectors)."""
-        self._num_data_files += 1
-
         # Select the data
         if len(df) > hpc.sort_index_len:
             df = self._select_with_sort_indices(df)
         else:
             df = self._select_with_masks(df)
+
+        self._num_data_files += 1
         return df, col_names
 
     def _select_with_masks(self, df):
@@ -215,7 +217,6 @@ class DataController:
         dwelling_type = self._selectors.get('dwelling_type', None)
         tenure = self._selectors.get('tenure', None)
 
-        print(years, postcodes, is_new, dwelling_type, tenure)
         yield from hpd.cache.yield_items([years, postcodes, is_new, dwelling_type, tenure])
 
     def _get_postcodes_to_read(self):
