@@ -1,0 +1,7 @@
+[2022-04-14 10:08:32 +0100] [22200] [INFO] Starting gunicorn 20.1.0
+[2022-04-14 10:08:32 +0100] [22200] [INFO] Listening at: unix:/home/matt/HousePrices/Web/hp_web/hp_web.sock (22200)
+[2022-04-14 10:08:32 +0100] [22200] [INFO] Using worker: sync
+[2022-04-14 10:08:32 +0100] [22201] [INFO] Booting worker with pid: 22201
+[2022-04-14 10:08:33 +0100] [22200] [INFO] Handling signal: int
+[2022-04-14 10:08:34 +0100] [22201] [INFO] Worker exiting (pid: 22201)
+[2022-04-14 10:08:34 +0100] [22200] [INFO] Shutting down: Master

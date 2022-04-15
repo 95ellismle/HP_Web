@@ -24,7 +24,6 @@ class DataController:
     def __init__(self, selectors, cols_to_display=None):
         self._start_time = time.time()
         self._selectors = selectors
-        #self._set_years_to_get()
         self._cols_to_display = cols_to_display
         print(f'{selectors=}')
 
