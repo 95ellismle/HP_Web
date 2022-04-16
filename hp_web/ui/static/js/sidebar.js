@@ -1,6 +1,5 @@
 NUM_DROPDOWN_OPTS = 60;
 
-
 /*
  * Will re-populate fields after form submission.
  *
