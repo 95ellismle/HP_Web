@@ -9,7 +9,8 @@
 	<div class="w3-sidebar w3-bar-block my-sidebar" id='my-sidebar' style='display: none'>
 		<form method="POST" class="post-form">
 			{% csrf_token %}
-			<input type="submit" class="w3-btn w3-ripple w3-right submit-button" style="margin-bottom: 0; margin-right: 5px; margin-top: 5px;">
+			<input type="submit" class="w3-btn w3-ripple w3-right submit-button" style="margin-bottom: 0; margin-right: 5px; margin-top: 5px;"
+			       onclick='set_hamburger_mode(false)'>
 
 			<!-- Postcode -->
 			<script>
@@ -123,6 +124,12 @@
 			const sidebar_div = document.getElementById('my-sidebar');
 			const sdb_cnt_div = document.getElementById('sidebar-content');
 			const hbgr_icon = document.getElementById('hamburger-icon-li');
+			const overlay = document.getElementById('grey-overlay');
+			
+			// If the window has a desktop width then never show the hamburger
+			if (window.innerWidth > 700) {
+				set_state = false;
+			}
 
 			// Hide sidebar
 			if (set_state) {
@@ -130,6 +137,7 @@
 				sdb_cnt_div.style.width = '100%';
 				sdb_cnt_div.style.left = '0px';
 				hbgr_icon.style.display = 'block';
+				overlay.style.display = 'none';
 			} 
 			// Show sidebar
 			else {
@@ -137,6 +145,10 @@
 				sdb_cnt_div.style.width = 'calc(100% - 190px)';
 				sdb_cnt_div.style.left = '190px';
 				hbgr_icon.style.display = 'none';
+				overlay.style.display = 'block';
+			}
+			if (window.innerWidth > 700) {
+				overlay.style.display = 'none';
 			}
 		}
 
@@ -149,8 +161,10 @@
 
 	<!-- Main Body -->
 	<div class="w3-container sidebar_content" style='padding: 0; width: calc(100% - 190px); height: 100%' id='sidebar-content'>
+		<div style='width: 100%; height: 100%; z-index: 2; background-color: #000; opacity: 0.5; position: absolute;'
+		 	 id='grey-overlay' onclick='set_hamburger_mode(true)'></div>
 		<ul class='navbar-ul' id='navbar'>
-			<li class='navbar-li' id='hamburger-icon-li' onclick='set_hamburger_mode(false)'>
+			<li class='navbar-li' id='hamburger-icon-li'>
 				<div id="hamburger-icon" onclick='set_hamburger_mode(false)'>
 					<svg height="50" width="50">
 						<line x1="10%" y1="25%" x2="90%" y2="25%" class='hamburger_line' />
@@ -176,19 +190,9 @@
 			document.getElementById('id_IP').value = data['ip'];
 		});
 
-		if (window.innerWidth < 700) {
-			set_hamburger_mode(true);
-		} else {
-			set_hamburger_mode(false);
-		}
-
+		set_hamburger_mode(true);
 		window.addEventListener("resize", function() {
-			const win_width = window.innerWidth;
-			if (win_width < 700) {
-				set_hamburger_mode(true);
-			} else {
-				set_hamburger_mode(false);
-			}
+			set_hamburger_mode(true);
 		})
 
 	</script>
