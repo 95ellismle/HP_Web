@@ -7,6 +7,8 @@ hp_config/hp_config/maps/city_to_pc.json
 hp_config/hp_config/maps/county_to_pc.json
 hp_config/hp_config/maps/street_to_pc.json
 
+*DS_Store*
+
 # Some Web bits and bobs
 hp_web/static
 secret_key.key

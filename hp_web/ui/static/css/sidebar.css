@@ -10,8 +10,8 @@
 	color: #eee;
 }
 
-#hamburger-icon-nb {
-	display: none;
+#hamburger-icon-li {
+	display: block;
 	cursor: pointer;
 }
 

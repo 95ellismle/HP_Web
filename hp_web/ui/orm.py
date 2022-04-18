@@ -14,7 +14,7 @@ def record_usage_stats(selectors, IP, server_response_time):
                               street=selectors.get('street'),
                               city=selectors.get('city'),
                               county=selectors.get('county'),
-                              is_new=selectors.get('is_new'),
+                              #is_new=selectors.get('is_new'),
                               dwelling_type=selectors.get('dwelling_type'),
                               tenure=selectors.get('tenure'),
                               price_low=selectors.get('price_low'),

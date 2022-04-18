@@ -8,7 +8,7 @@ class Filter(models.Model):
     street = models.CharField(max_length=128)
     city = models.CharField(max_length=128)
     county = models.CharField(max_length=64)
-    is_new = models.CharField(max_length=16)
+    #is_new = models.CharField(max_length=16)
     dwelling_type = models.CharField(max_length=64)
     tenure = models.CharField(max_length=32)
     price_low = models.IntegerField()
@@ -27,7 +27,7 @@ class UsageStats(models.Model):
     street = models.CharField(max_length=128, null=True)
     city = models.CharField(max_length=128, null=True)
     county = models.CharField(max_length=64, null=True)
-    is_new = models.CharField(max_length=16, null=True)
+    #is_new = models.CharField(max_length=16, null=True)
     dwelling_type = models.CharField(max_length=64, null=True)
     tenure = models.CharField(max_length=32, null=True)
     price_low = models.IntegerField(null=True)
@@ -41,7 +41,7 @@ class UsageStats(models.Model):
 
     def __str__(self):
         s = ''
-        for i in ('postcode', 'paon', 'street', 'city', 'county', 'is_new',
+        for i in ('postcode', 'paon', 'street', 'city', 'county',
                   'dwelling_type', 'tenure', 'price_low', 'price_high',
                   'date_from', 'date_to', 'response_time', 'IP_address'):
             s += f'{i}  {getattr(self, i)}'

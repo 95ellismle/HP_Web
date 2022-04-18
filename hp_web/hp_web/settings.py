@@ -26,7 +26,7 @@ with open(BASE_DIR / 'secret_key.key', 'r') as f:
 #SECRET_KEY = 'django-insecure-=tjxgrqm2i-f#mlh^l*l4^o(g_w7&bwpygw!efd(i3l-e*izzs'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
 ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'what-did-they-pay.co.uk']
 
@@ -121,10 +121,11 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 STATIC_ROOT = Path(BASE_DIR) / 'static'
+print(STATIC_ROOT)
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.0/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-CSRF_TRUSTED_ORIGINS = ['https://*.what-did-they-pay.co.uk']
+#CSRF_TRUSTED_ORIGINS = ['https://*.what-did-they-pay.co.uk', 'http://localhost']

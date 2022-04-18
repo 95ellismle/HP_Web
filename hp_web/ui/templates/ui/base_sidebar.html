@@ -1,6 +1,10 @@
 {% extends 'ui/base.html' %}
 {% load static %}
 
+<script>
+	const window.MAX_SCREEN_WIDTH_HAMBURGER = 800;
+</script>
+
 {% block content %}
 	<script type="text/javascript" src="{% static 'js/sidebar.js' %}"></script>
 	<link rel="stylesheet" href="{% static 'css/sidebar.css' %}">
@@ -89,12 +93,13 @@
 			<input class="w3-check" type="checkbox" name="dwelling_type_checks" checked style="margin-left: 15px;"
 				   onchange="set_form_check_value('dwelling_type')" value='Residential'>
 			<label>Residential</label>
+			<br>
 			<input class="w3-check" type="checkbox" name="dwelling_type_checks" style="margin-left: 15px" 
 				   onchange="set_form_check_value('dwelling_type')" value='Commercial'>
 			<label>Commericial</label>
 			<input style="display: none" type="text" id="id_dwelling_type" name="dwelling_type" value="Residential">
 
-			<!-- Is New Build? -->
+		<!--	Is New Build?
 			<label class="w3-bar-item"><b>New Build</b></label>
 			<input class="w3-check" type="checkbox" name="is_new_checks" value="is_new" style="margin-left: 15px" checked
 				   onchange="set_form_check_value('is_new')">
@@ -102,7 +107,8 @@
 			<input class="w3-check" type="checkbox" name="is_new_checks" value="not_new" checked
 				   onchange="set_form_check_value('is_new')">
 			<label>No</label>
-			<input style="display: none" type="text" id="id_is_new" name="is_new" value="is_new,not_new">
+			<input style="display: none" type="text" id="id_is_new" name="is_new" value="is_new,not_new"> 
+		-->
 
 			<!-- Freehold or Leasehold? -->
 			<label class="w3-bar-item"><b>Tenure</b></label>
@@ -127,7 +133,7 @@
 			const overlay = document.getElementById('grey-overlay');
 			
 			// If the window has a desktop width then never show the hamburger
-			if (window.innerWidth > 700) {
+			if (window.innerWidth > window.MAX_SCREEN_WIDTH_HAMBURGER) {
 				set_state = false;
 			}
 
@@ -147,7 +153,7 @@
 				hbgr_icon.style.display = 'none';
 				overlay.style.display = 'block';
 			}
-			if (window.innerWidth > 700) {
+			if (window.innerWidth > window.MAX_SCREEN_WIDTH_HAMBURGER) {
 				overlay.style.display = 'none';
 			}
 		}
@@ -167,9 +173,9 @@
 			<li class='navbar-li' id='hamburger-icon-li'>
 				<div id="hamburger-icon" onclick='set_hamburger_mode(false)'>
 					<svg height="50" width="50">
-						<line x1="10%" y1="25%" x2="90%" y2="25%" class='hamburger_line' />
-						<line x1="10%" y1="50%" x2="90%" y2="50%" class='hamburger_line' />
-						<line x1="10%" y1="75%" x2="90%" y2="75%" class='hamburger_line' />
+						<line x1="15%" y1="27%" x2="85%" y2="27%" class='hamburger_line' />
+						<line x1="15%" y1="50%" x2="85%" y2="50%" class='hamburger_line' />
+						<line x1="15%" y1="73%" x2="85%" y2="73%" class='hamburger_line' />
 					</svg>
 				</div>
 			</li>

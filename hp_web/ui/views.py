@@ -37,7 +37,7 @@ def fetch_trie(request):
 class BaseSelectorScreen(View):
     """A base screen that handles selectors that other screens can inherit from"""
     _str_keys = {'city', 'street', 'postcode', 'county', 'paon'}
-    _checks = {'is_new': 2, 'tenure': 2, 'dwelling_type': 5}
+    _checks = {'is_new': 2, 'tenure': 2, 'dwelling_type': 2}
 
     def _create_selectors(self, request):
         """Will create the selectors that will be sent to the controller to get back data
@@ -82,12 +82,12 @@ class BaseSelectorScreen(View):
             else:
                 selectors['tenure'] = selectors['tenure'][0]
 
-        # Prep new build
-        if 'is_new' in selectors:
-            if len(selectors['is_new']) == 2:
-                selectors.pop('is_new')
-            else:
-                selectors['is_new'] = selectors['is_new'][0] == 'is_new'
+#        # Prep new build
+#        if 'is_new' in selectors:
+#            if len(selectors['is_new']) == 2:
+#                selectors.pop('is_new')
+#            else:
+#                selectors['is_new'] = selectors['is_new'][0] == 'is_new'
 
         return selectors
 
@@ -174,7 +174,7 @@ class DataScreen(BaseSelectorScreen):
                     ret_data = self._append_to_data(df, col_names, ret_data)
 
                     if self._data_len > self._max_data_len:
-                        ret_obj['err_msg'] = (f'Only the first {self._max_data_len:,} results are being passed back from the server.'
+                        ret_obj['err_msg'] = (f'Only the first {self._max_data_len:,} results are being passed back from the server. '
                                               f'Please narrow your search to see all data.')
                         break
             except Exception as e:

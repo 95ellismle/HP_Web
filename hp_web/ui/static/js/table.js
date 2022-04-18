@@ -32,7 +32,7 @@ const ROW_FUNCS = {'date_transfer': function (val) {
 				   'county': blank_func,
 				   'postcode': blank_func,
 				   'dwelling_type': function (val) {
-					   return val.toLowerCase();
+				       return val.toLowerCase();
 				   },
 				   'is_new': function (val) {
 						return new_map[val];
@@ -41,7 +41,7 @@ const ROW_FUNCS = {'date_transfer': function (val) {
 };
 
 let COLS_TO_SHOW = ['date_transfer', 'price', 'paon', 'street', 'city',
-					'postcode', 'dwelling_type'];
+					'postcode'];
 
 /* Contains logic for creating the table.
  *
