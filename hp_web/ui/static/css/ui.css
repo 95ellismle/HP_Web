@@ -40,7 +40,7 @@
 /*The content right of the sidebar*/
 .sidebar_content {
 	position: absolute;
-	left: 190px;
+	left: 0px;
     padding: 0.01em 5px;
 }
 

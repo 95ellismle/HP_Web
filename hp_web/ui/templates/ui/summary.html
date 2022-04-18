@@ -6,10 +6,9 @@
 {% block main_content %}
 <p class='err_msg'>{{err_msg}}</p>
 
-<style>
-</style>
-
+<script type='text/javascript' src="{% static 'js/utils.js' %}"></script>
 <script type='text/javascript' src="{% static 'js/table.js' %}"></script>
+<script type='text/javascript' src="{% static 'js/plot.js' %}"></script>
 <script src='https://cdn.plot.ly/plotly-2.9.0.min.js'></script>
 
 <link rel="stylesheet" href="{% static 'css/table.css' %}">
@@ -92,6 +91,21 @@
 		}
 	}
 
+	/* Will handle which tab is set to be active in the navbar
+	*/
+	function _handle_navbar_active_switcher(name) {
+		for (i in navbar_obj) {
+			navbar_obj[i]['a_obj'].className.replace(' active', '');
+		}
+		window.navbarElement = name;
+
+		window.current_element.hide();
+		localStorage.setItem('navbarElement', name);
+		if (navbar_obj[name]['a_obj'].className.search(' active ') === -1) {
+			navbar_obj[name]['a_obj'].className += ' active ';
+		}
+	}
+
 	/* Will create the plot page in a div
      * 
      * Args:
@@ -103,23 +117,43 @@
 						(from `decode_huffman` function)
 	 */
 	function create_plot_page(div_name, table_data) {
-		if (window.table) { window.table.hide(); }
-
-			
 		if (Object.entries(table_data).length > 0 & table_data['data'].length > 0) {
 			window.plot = new Plot(table_data, 'id_plot_div');
 			window.plot.plot('date_transfer', 'price');
 			window.plot.show();
 		}
-
-		window.navbarElement = 'plot';
-		localStorage.setItem('navbarElement', 'plot');
-		navbar_obj['Table']['a_obj'].className = navbar_obj['Table']['a_obj'].className.replace(' active ', '');
-		if (navbar_obj['Plot']['a_obj'].className.search(' active ') === -1) {
-			navbar_obj['Plot']['a_obj'].className += ' active ';
-		}
+		_handle_navbar_active_switcher('plot');
+		window.current_element = window.plot;
 	}
 
+	/* Will create the map page in a div
+     * 
+     * Args:
+     *    - div_name: <str> the id of the div to create the table in
+     *    - table_data: <object> the data in the table of the form: {'columns': [...],
+    																 'data': [['col1', 'col2', ...],
+    																		  ['col1', 'col2', ...],
+    																		   ...]}
+						(from `decode_huffman` function)
+	 */
+	function create_map_page(div_name, table_data) {
+		if (window.table) { window.table.hide(); }
+
+			
+		if (Object.entries(table_data).length > 0 & table_data['data'].length > 0) {
+			window.map = new Map(table_data, 'id_plot_div');
+			window.map.draw();
+			window.map.show();
+		}
+
+		window.navbarElement = 'map';
+		localStorage.setItem('navbarElement', 'map');
+		navbar_obj['Table']['a_obj'].className = navbar_obj['Table']['a_obj'].className.replace(' active ', '');
+		if (navbar_obj['map']['a_obj'].className.search(' active ') === -1) {
+			navbar_obj['map']['a_obj'].className += ' active ';
+		}
+	}
+	
 	{% if data.length != 0 %}
 		table_data = decode_huffman(input_data);
 		const NE = localStorage.getItem('navbarElement') || window.navbarElement || 'table';
@@ -139,6 +173,8 @@
 			case 'Plot':
 				create_plot_page('content_div', table_data);
 				break;
+			case 'Map':
+				create_map_page('content_div', table_data);
 			default:
 				console.log(`No case ${navbar_item}`);
 		}
