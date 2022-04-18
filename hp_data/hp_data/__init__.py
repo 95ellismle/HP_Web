@@ -45,5 +45,6 @@ else:
 if os.environ.get('SKIP_CACHE', False):
     cache_years = []
 
+#cache_years = [2022, 2021, 2020, 2019] #list(range(2006, 2023))
 cache = dc.DataCache(cache_years)
 

@@ -32,8 +32,6 @@ class DataController:
         t1 = time.time()
         all_df = self._read_data_files()
         t2 = time.time()
-        all_df = list(all_df)
-        print(f"BOB, {all_df}")
 
         try:
             self._num_data_files = 0

@@ -64,7 +64,6 @@ class DataCache(dict):
             except NameError:
                 raise SystemExit(f"Filename corrupt: {i}")
 
-        print(self)
         print(f'Read cache year: {year}')
 
     def _create_cache(self):
