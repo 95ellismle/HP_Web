@@ -40,7 +40,6 @@ function set_checkboxes_from_value(name, boxes_to_check) {
 	for (let i=0; i<boxes.length; i++) { box_vals[boxes[i].value] = false; }
 	// Set the boxes that should be true to true
 	for (let i=0; i<split_vals.length; i++) { box_vals[split_vals[i]] = true; }
-	console.log(box_vals);
 
 	// Set the boxes
 	for (let i=0; i<boxes.length; i++) { boxes[i].checked = box_vals[boxes[i].value]; }
