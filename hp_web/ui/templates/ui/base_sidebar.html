@@ -1,9 +1,6 @@
 {% extends 'ui/base.html' %}
 {% load static %}
 
-<script>
-	const window.MAX_SCREEN_WIDTH_HAMBURGER = 800;
-</script>
 
 {% block content %}
 	<script type="text/javascript" src="{% static 'js/sidebar.js' %}"></script>
@@ -14,7 +11,7 @@
 		<form method="POST" class="post-form">
 			{% csrf_token %}
 			<input type="submit" class="w3-btn w3-ripple w3-right submit-button" style="margin-bottom: 0; margin-right: 5px; margin-top: 5px;"
-			       onclick='set_hamburger_mode(false)'>
+			       onclick='set_hamburger_mode(true)'>
 
 			<!-- Postcode -->
 			<script>
@@ -125,6 +122,7 @@
 	</div>
 
 	<script type="text/javascript">
+		const MAX_SCREEN_WIDTH_HAMBURGER = 800;
 		/* Will toggle the hamburger menu on or off */
 		function set_hamburger_mode(set_state) {
 			const sidebar_div = document.getElementById('my-sidebar');
@@ -133,7 +131,7 @@
 			const overlay = document.getElementById('grey-overlay');
 			
 			// If the window has a desktop width then never show the hamburger
-			if (window.innerWidth > window.MAX_SCREEN_WIDTH_HAMBURGER) {
+			if (window.innerWidth >= MAX_SCREEN_WIDTH_HAMBURGER) {
 				set_state = false;
 			}
 
@@ -152,8 +150,9 @@
 				sdb_cnt_div.style.left = '190px';
 				hbgr_icon.style.display = 'none';
 				overlay.style.display = 'block';
+				//overlay.style.display = '190px';
 			}
-			if (window.innerWidth > window.MAX_SCREEN_WIDTH_HAMBURGER) {
+			if (window.innerWidth >= MAX_SCREEN_WIDTH_HAMBURGER) {
 				overlay.style.display = 'none';
 			}
 		}
@@ -166,7 +165,7 @@
 	<script type="text/javascript" src="{% static 'js/categories.js' %}"></script>
 
 	<!-- Main Body -->
-	<div class="w3-container sidebar_content" style='padding: 0; width: calc(100% - 190px); height: 100%' id='sidebar-content'>
+	<div class="w3-container sidebar_content" id='sidebar-content'>
 		<div style='width: 100%; height: 100%; z-index: 2; background-color: #000; opacity: 0.5; position: absolute; display: none;'
 		 	 id='grey-overlay' onclick='set_hamburger_mode(true)'></div>
 		<ul class='navbar-ul' id='navbar'>
@@ -180,11 +179,11 @@
 				</div>
 			</li>
 		</ul>
-		<div class="w3-content" style="width: 100%" onclick='set_hamburger_mode(true)'>
+		<div class="w3-content" style="width: 100%">
 			{% block main_content %}
 			{% endblock %}
 		</div>
-		<div class="w3-container" onclick='set_hamburger_mode(true)' style='height: calc(100% - 60px)'>
+		<div class="w3-container" style='height: calc(100% - 60px)'>
 			<br>
 			Contains HM Land Registry data © Crown copyright and database right 2021. This data is licensed under the Open Government Licence v3.0.
 		</div>
@@ -196,7 +195,7 @@
 			document.getElementById('id_IP').value = data['ip'];
 		});
 
-		set_hamburger_mode(true);
+		set_hamburger_mode(false);
 		window.addEventListener("resize", function() {
 			set_hamburger_mode(true);
 		})

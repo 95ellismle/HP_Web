@@ -24,25 +24,21 @@
 </div>
 
 <script>
-	const False=false;
-	const True=true;
+//	const False=false;
+//	const True=true;
 	{% autoescape off %}
-	const input_data = {
-		{% for k, v in data.items %}
-			'{{k}}': {{v}},
-		{% endfor %}
-	};
+	const input_data = {{data}};
 	{% endautoescape %}
 
 	// Add navbar items
 	const navbar = document.getElementById('navbar');
-	let navbar_obj = {'Table': {}, 'Plot': {}};
+	let navbar_obj = {'table': {}, 'plot': {}}; //, 'map': {}};
 	for (let elm_name in navbar_obj) {
 		const li = document.createElement('li');
 		li.className = 'navbar-li';
 		const a = document.createElement('a');
 		a.className = 'navbar-a';
-		a.innerHTML = elm_name;
+		a.innerHTML = title_case(elm_name);
 		a.setAttribute('onclick', `switchView('${elm_name}')`);
 
 		li.appendChild(a);
@@ -51,7 +47,7 @@
 		navbar_obj[elm_name]['li_obj'] = li;
 
 	}
-	navbar_obj['Table']['a_obj'].className += ' active ';
+	navbar_obj['table']['a_obj'].className += ' active ';
 
 
 	//////////////////////////////////////////
@@ -68,38 +64,35 @@
 						(from `decode_huffman` function)
 	 */
 	function create_table_page(div_name, table_data) {
-		// If we're already on the table page then don't do anything
-		if (window.plot) { window.plot.hide(); }
-
+		// Create the table
 		if (Object.entries(table_data).length > 0 & table_data['data'].length > 0) {
 			window.table = new Table(table_data, 'id_table_div', 'id_summary_table');
 			window.table.show();
 			window.table.create_table();
 			/* Add more to table on scroll down */
-			window.addEventListener("scroll", function() {
+			const sidebar_div = document.getElementById('sidebar-content');
+			sidebar_div.addEventListener("scroll", function() {
 				if (percentageScrolled() > 0.9) {
-					window.table.draw_next_N_rows(2);
+					window.table.draw_next_N_rows(20);
 				}
 			})
 		}
 
-		window.navbarElement = 'table';
-		localStorage.setItem('navbarElement', 'table');
-		navbar_obj['Plot']['a_obj'].className = navbar_obj['Plot']['a_obj'].className.replace(' active ', '');
-		if (navbar_obj['Table']['a_obj'].className.search(' active ') === -1) {
-			navbar_obj['Table']['a_obj'].className += ' active ';
-		}
+		_handle_navbar_active_switcher('table');
+		window.current_element = window.table;
 	}
 
 	/* Will handle which tab is set to be active in the navbar
 	*/
 	function _handle_navbar_active_switcher(name) {
 		for (i in navbar_obj) {
-			navbar_obj[i]['a_obj'].className.replace(' active', '');
+			navbar_obj[i]['a_obj'].className = navbar_obj[i]['a_obj'].className.replace(' active', '');
 		}
 		window.navbarElement = name;
 
-		window.current_element.hide();
+		if (window.current_element) {
+			window.current_element.hide();
+		}
 		localStorage.setItem('navbarElement', name);
 		if (navbar_obj[name]['a_obj'].className.search(' active ') === -1) {
 			navbar_obj[name]['a_obj'].className += ' active ';
@@ -137,21 +130,13 @@
 						(from `decode_huffman` function)
 	 */
 	function create_map_page(div_name, table_data) {
-		if (window.table) { window.table.hide(); }
-
-			
 		if (Object.entries(table_data).length > 0 & table_data['data'].length > 0) {
 			window.map = new Map(table_data, 'id_plot_div');
 			window.map.draw();
 			window.map.show();
 		}
-
-		window.navbarElement = 'map';
-		localStorage.setItem('navbarElement', 'map');
-		navbar_obj['Table']['a_obj'].className = navbar_obj['Table']['a_obj'].className.replace(' active ', '');
-		if (navbar_obj['map']['a_obj'].className.search(' active ') === -1) {
-			navbar_obj['map']['a_obj'].className += ' active ';
-		}
+		_handle_navbar_active_switcher('map');
+		window.current_element = window.map;
 	}
 	
 	{% if data.length != 0 %}
@@ -167,13 +152,13 @@
 	/* Will switch between the Table View and the Plot View */
 	function switchView(navbar_item) {
 		switch (navbar_item) {
-			case 'Table':
+			case 'table':
 				create_table_page('content_div', table_data);
 				break;
-			case 'Plot':
+			case 'plot':
 				create_plot_page('content_div', table_data);
 				break;
-			case 'Map':
+			case 'map':
 				create_map_page('content_div', table_data);
 			default:
 				console.log(`No case ${navbar_item}`);

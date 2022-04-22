@@ -4,19 +4,17 @@ from django.shortcuts import render
 from django.views import View
 
 import json
-import os
 import numpy as np
+import os
 import pandas as pd
+import requests as rq
 import time
 import yaml
 
-import hp_data as hpd
-
 from .forms import FilterForm
 from . import orm
-from hp_data import controller as cnt
-from hp_data import utils as ut
-from hp_data.controller import NoDataError
+
+import hp_data as hpd
 
 
 def fetch_trie(request):
@@ -73,6 +71,10 @@ class BaseSelectorScreen(View):
             selectors.pop('date_to')
         if 'date_from' in selectors and selectors['date_from'] <= min_date:
             selectors.pop('date_from')
+        if 'date_to' in selectors:
+            selectors['date_to'] = selectors['date_to'].strftime('%Y-%m-%d')
+        if 'date_from' in selectors:
+            selectors['date_from'] = selectors['date_from'].strftime('%Y-%m-%d')
 
         # Prep tenure
         if 'tenure' in selectors:
@@ -81,13 +83,6 @@ class BaseSelectorScreen(View):
                 selectors.pop('tenure')
             else:
                 selectors['tenure'] = selectors['tenure'][0]
-
-#        # Prep new build
-#        if 'is_new' in selectors:
-#            if len(selectors['is_new']) == 2:
-#                selectors.pop('is_new')
-#            else:
-#                selectors['is_new'] = selectors['is_new'][0] == 'is_new'
 
         return selectors
 
@@ -108,43 +103,6 @@ class DataScreen(BaseSelectorScreen):
                                                    'table': {},
                                                    'err_msg': ''})
 
-    def _append_to_data(self, df, col_names, data):
-        """Will build up the data dict to send to the front end.
-
-        Args:
-            df: Input data (from controller)
-            col_names: The names of extra columns all with the same value
-            data: dict that will store the data to pass to the frontend
-        """
-        self._data_len += len(df)
-        if self._data_len > self._max_data_len:
-            remainder = self._data_len - self._max_data_len
-            if remainder > len(df):
-                return data
-            else:
-                df = df.iloc[:remainder]
-
-
-        for col in df.columns:
-            if df.dtypes[col] == 'category':
-                data.setdefault(col, []).extend([list(i) for i in ut.huffman(df[col].cat.codes.values) if i])
-
-            elif df.dtypes[col] == 'datetime64[ns]':
-                ret = [[np.datetime_as_string(i[0], 'D'), i[1]]
-                       for i in ut.huffman(df[col].values)]
-                data.setdefault(col, []).extend(ret)
-
-            else:
-                if col in {'price', 'postcode', 'paon', 'street'}:
-                    data.setdefault(col, []).extend(list(df[col].values))
-                else:
-                    data.setdefault(col, []).extend(ut.huffman(df[col].values))
-
-        for col, val in col_names:
-            data.setdefault(col, []).append([val, len(df)])
-
-        return data
-
     def post(self, request):
         """After submitting form"""
         form = FilterForm(request.POST)
@@ -153,38 +111,18 @@ class DataScreen(BaseSelectorScreen):
 
         if form.is_valid():
             selectors = self._create_selectors(request)
-            # Create data generator
-            try:
-                cont = cnt.DataController(selectors, ['date_transfer', 'price', 'paon', 'street',
-                                                      'city', 'county', 'postcode',])
-                data = cont.read_data()
-            except Exception as e:
-                ret_obj['err_msg'] = 'No data for current selection, try a different search'
-                print('Exception: ', e)
-                return render(request, 'ui/summary.html', ret_obj)
-
-            # Now actually read the data (first 10,000 lines)
-            data_len = 0
-            ret_data = {}
-            self._data_len = 0
-
             t1 = time.time()
-            try:
-                for df, col_names in data:
-                    ret_data = self._append_to_data(df, col_names, ret_data)
-
-                    if self._data_len > self._max_data_len:
-                        ret_obj['err_msg'] = (f'Only the first {self._max_data_len:,} results are being passed back from the server. '
-                                              f'Please narrow your search to see all data.')
-                        break
-            except Exception as e:
-                ret_obj['err_msg'] = 'No data for current selection, try a different search'
-                print('Exception: ', e)
-                return render(request, 'ui/summary.html', ret_obj)
-
-            ret_obj['data'] = ret_data
+            ret_data = rq.post('http://0.0.0.0:8008', json={**selectors}).json()
             data_retreival_time = time.time() - t1
 
             orm.record_usage_stats(selectors, request.POST.get('IP'), data_retreival_time)
+
+        if isinstance(ret_data, int):
+            if ret_data == 1:
+                ret_obj['err_msg'] = 'No data for current selection, please try a different search'
+            else:
+                ret_obj['err_msg'] = 'Internal Server Error'
+        else:
+            ret_obj['data'] = ret_data
 
         return render(request, 'ui/summary.html', ret_obj)

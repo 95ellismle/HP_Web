@@ -3,15 +3,20 @@ from data import path as data_dir
 from pathlib import Path
 from pyarrow import feather as ft
 
-import time
 import pandas as pd
+import time
 
 # Libraries from this project
 from data import path
 import hp_config as hpc
 from hp_data.exceptions import NoDataError
+from hp_data import datacache as dc
 import hp_data as hpd
 import hp_data.utils as ut
+
+
+cache_years = [2022, 2021]
+cache = dc.DataCache(cache_years)
 
 
 class DataController:
@@ -214,7 +219,7 @@ class DataController:
         dwelling_type = self._selectors.get('dwelling_type', None)
         tenure = self._selectors.get('tenure', None)
 
-        yield from hpd.cache.yield_items([years, postcodes, is_new, dwelling_type, tenure])
+        yield from cache.yield_items([years, postcodes, is_new, dwelling_type, tenure])
 
     def _get_postcodes_to_read(self):
         """Get the data from the postcode files."""

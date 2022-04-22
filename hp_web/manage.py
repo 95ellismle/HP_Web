@@ -4,23 +4,6 @@ import os
 import sys
 
 
-# Skip cache if we don't need it
-match sys.argv[-1]:
-    case 'makemigrations':
-        os.environ['SKIP_CACHE'] = '1'
-    case 'migrate':
-        os.environ['SKIP_CACHE'] = '1'
-    case 'shell':
-        os.environ['SKIP_CACHE'] = '1'
-    case 'collectstatic':
-        os.environ['SKIP_CACHE'] = '1'
-
-# Do testing if required
-if '-t' in sys.argv:
-    os.environ['DO_TEST'] = 'True'
-    sys.argv.remove('-t')
-
-
 def main():
     """Run administrative tasks."""
     os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'hp_web.settings')

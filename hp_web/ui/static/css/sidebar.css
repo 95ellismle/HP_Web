@@ -10,6 +10,14 @@
 	color: #eee;
 }
 
+#sidebar-content {
+	padding: 0; 
+	width: calc(100% - 190px); 
+	height: 100%;
+	position: fixed;
+	overflow-y: scroll;
+}
+
 #hamburger-icon-li {
 	display: block;
 	cursor: pointer;

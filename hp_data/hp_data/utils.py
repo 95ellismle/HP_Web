@@ -232,5 +232,5 @@ def huffman(arr):
 
     inds = np.insert(inds, 0, 0)
     lens_ = np.insert(np.diff(inds), len(inds)-1, len(arr) - inds[-1])
-    return tuple(zip(arr[inds], lens_))
+    return tuple(zip(arr[inds], map(int, lens_)))
 

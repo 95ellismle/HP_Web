@@ -1,15 +1,11 @@
 """One time setup code called when hp_data (or it's sub mods) is imported"""
 import json
 import logging
-import os
 import pandas as pd
-import sys
 import yaml
 
-from data import path as dt_path
 from hp_config import path as conf_path
 from hp_data import utils as ut
-from hp_data import datacache as dc
 
 log = logging.getLogger(__name__)
 
@@ -35,16 +31,3 @@ with open(conf_path / 'data_stats.yaml', 'r') as f:
         if key.endswith('_date'):
             DATA_STATS[key] = pd.to_datetime(DATA_STATS[key], format='%Y/%m/%d')
 DATA_STATS['poss_postcodes_trie'] = ut.create_trie(DATA_STATS['poss_postcodes'])
-
-do_test = os.environ.get('DO_TEST', False)
-if do_test == 'True':
-    cache_years = [2021]
-else:
-    cache_years = os.environ.get('CACHE_YEARS', None)
-
-if os.environ.get('SKIP_CACHE', False):
-    cache_years = []
-
-#cache_years = [2022, 2021, 2020, 2019] #list(range(2006, 2023))
-cache = dc.DataCache(cache_years)
-

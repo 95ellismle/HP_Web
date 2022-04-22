@@ -120,16 +120,32 @@ class BasePage {
 
 /* Get the height of the entire document */
 function getDocHeight() {
-    var document_ = document;
-    return Math.max(
-        document_.documentElement.scrollHeight,
-        document_.body.clientHeight
-    ) - window.innerHeight
+    //return var document_ = document;
+    //let page_height = Math.max(
+    //    document_.documentElement.scrollHeight,
+    //    document_.body.clientHeight
+    //) - window.innerHeight;
 }
 
 /* Determine how much of the page the user has scrolled down */
 function percentageScrolled() {
-	return window.pageYOffset / getDocHeight();
+	const elm = document.getElementById('sidebar-content');
+	const scroll_amount = elm.scrollTop + elm.clientHeight;
+	const height = elm.scrollHeight;
+	//let scroll_amount = window.pageYOffset
+	return scroll_amount / height;
 }
 
+/* Title case a string i.e: capitalise each first letter
+ *
+ * Splits string by space, uppercases first letter and then joins
+ */
+function title_case(str) {
+  str = str.toLowerCase();
+  str = str.split(' ');
+  for (var i=0; i <str.length; i++) {
+    str[i] = str[i].charAt(0).toUpperCase() + str[i].slice(1);
+  }
 
+  return str.join(' ');
+}
