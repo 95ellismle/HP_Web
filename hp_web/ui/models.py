@@ -38,6 +38,7 @@ class UsageStats(models.Model):
 
     response_time = models.FloatField()
     IP_address = models.CharField(max_length=64)
+    time_of_submission = models.DateTimeField(null=False, auto_now_add=True)
 
     def __str__(self):
         s = ''

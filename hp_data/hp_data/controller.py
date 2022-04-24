@@ -15,8 +15,7 @@ import hp_data as hpd
 import hp_data.utils as ut
 
 
-cache_years = [2022, 2021]
-cache = dc.DataCache(cache_years)
+cache = dc.DataCache(list(range(2022, 1994, -1)))
 
 
 class DataController:
