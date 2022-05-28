@@ -19,7 +19,9 @@
 			<table id="id_summary_table"></table>
 		</div>
 
-		<div id='id_plot_div' style='display: none'><p id='id_plot_explain'></p></div>
+		<div id='id_plot_div' style='display: none'>
+			<p id='id_plot_explain' style='margin: 0'></p>
+		</div>
 	</div>
 </div>
 
@@ -114,6 +116,8 @@
 			window.plot = new Plot(table_data, 'id_plot_div');
 			window.plot.plot('date_transfer', 'price');
 			window.plot.show();
+
+			document.getElementById('id_plot_explain').innerHTML = "The chart above shows the median price, along with each 10<sup>th</sup> percentile in increasingly faded colours.";
 		}
 		_handle_navbar_active_switcher('plot');
 		window.current_element = window.plot;

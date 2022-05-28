@@ -63,7 +63,7 @@ def index(**selectors):
         max_data_len = selectors.get('max_data_len')
         selectors.pop('max_data_len')
     else:
-        max_data_len = int(1e5)
+        max_data_len = int(4e5)
 
     # Create data generator
     try:

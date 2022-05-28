@@ -17,24 +17,17 @@ function stddev (arr, mean) {
 
 class Plot extends BasePage {
 
-	/*
-    '#1f77b4',  # muted blue
-    '#ff7f0e',  # safety orange
-    '#2ca02c',  # cooked asparagus green
-    '#d62728',  # brick red
-    '#9467bd',  # muted purple
-    '#8c564b',  # chestnut brown
-    '#e377c2',  # raspberry yogurt pink
-    '#7f7f7f',  # middle gray
-    '#bcbd22',  # curry yellow-green
-    '#17becf'   # blue-teal
-	*/
 	colors = {
-		'Detached': '#1f77b4',
-		'Semi-Detached': '#ff7f0e',
-		'Terraced': '#2ca02c',
-		'Flat/Maisonette': '#d62728',
-		'Other': '#9467bd',
+			"muted blue":             [31, 119, 180],
+   			"safety orange":          [255, 127, 14],
+   			"cooked asparagus green": [44, 160, 44],
+   			"brick red":              [214, 39, 40],
+   			"muted purple":           [148, 103, 189],
+   			"chestnut brown":         [140, 86, 75],
+   			"raspberry yogurt pink":  [227, 119, 194],
+   			"middle gray":            [127, 127, 127],
+   			"curry yellow-green":     [188, 189, 34],
+   			"blue-teal":              [23, 190, 207]
 	};
 	/* Will draw the PlotLy plot */
 	plot(x_key, y_key) {
@@ -46,20 +39,59 @@ class Plot extends BasePage {
 		this.groupby_col();
 
 		let traces = [];
+		// Groups are: Residential or Commercial
+		const group_colors = {'Residential': 'brick red',
+							  'Commercial': 'muted blue'};
 		const groups = Object.keys(this.groupby_data);
 		for (let i=0; i<groups.length; i++) {
 			const group_data = this.groupby_data[groups[i]];
-			//traces.push(
-			//	this.create_traces(group_data.x, group_data.y, groups[i],
-			//					   'trace', 'markers', 0.5, false)
-			//);
 
-			const ret = this.rolling_mean(group_data.x, group_data.y, 3);
-			traces.push(
-				this.create_traces(ret[0], ret[1], groups[i], groups[i], true)
-			)
+			const month_data = this.groupby_month(group_data.x, group_data.y);
+			// Median and 2 percentiles
+			const col = this.colors[group_colors[groups[i]]];
+
+			const low = this.rolling_mean(month_data, 3, 0.1);
+			const str_pref = `rgba(${col[0]}, ${col[1]}, ${col[2]}`;
+			const fill_col = `${str_pref},1)`;
+			traces.push(this.create_traces(low[0],  low[1],  {line: {width: 0},
+															  hoverinfo: 'none',
+															  fillcolor: `${str_pref}, 0.02)`
+															  }));
+			const ret = this.rolling_mean(month_data, 3, 0.5);
+			for (let i=0.2; i<0.6; i += 0.1) {
+				const low = this.rolling_mean(month_data, 3, i);
+				console.log(str_pref);
+				traces.push(this.create_traces(low[0],  low[1], {fill: 'tonexty',
+																 mode: 'none',
+																 hoverinfo: 'none',
+																 fillcolor: `${str_pref},${i - 0.08})`}));
+			}
+			traces.push(this.create_traces(ret[0], ret[1], {fill: 'tonexty',
+														    mode: 'none',
+															hoverinfo: 'none',
+															fillcolor: `${str_pref}, ${0.91 - i})`
+															}
+			));
+			for (let i=0.599; i<0.9; i += 0.1) {
+				const low = this.rolling_mean(month_data, 3, i);
+				traces.push(this.create_traces(low[0],  low[1], {fill: 'tonexty',
+																 mode: 'none',
+																 hoverinfo: 'none',
+																 fillcolor: `${str_pref}, ${1.02 - i})`
+																}
+				));
+				console.log(i);
+			}
+
+			traces.push(this.create_traces(ret[0],  ret[1],  {fill: 'tonexty',
+															  name: groups[i],
+															  hoverinfo: 'all',
+															  mode: 'line',
+															  fillcolor: `${str_pref}, 0.01)`,
+															  line: {width: 2,
+																	 color: fill_col},
+															  showlegend: true}));
 	 	}
-
 
 		const layout = {
 			autosize: true,
@@ -70,8 +102,7 @@ class Plot extends BasePage {
 			    size: 20,
 			    color: 'grey',
 			  }
-			},
-
+			}
 		};
 		const config = {responsive: true};
 
@@ -79,22 +110,16 @@ class Plot extends BasePage {
 	}
 
 	/* Will create a trace for 1 plot and return the object */
-	create_traces (xdata, ydata, group, label='', mode='lines', opacity=1, visible=true) {
+	create_traces (xdata, ydata, extra_args={}) {
 		let data = {
-			x: [],
-			y: [],
+			x: xdata,
+			y: ydata,
 			type: 'scatter',
-			mode: mode,
-			name: label,
-			opacity: opacity,
-			marker: {
-				color: this.colors[group],
-			},
-			visible: visible,
+			fillcolor: 'rgba(26,150,65,0.1)',
+			name: '',
+			showlegend: false,
+			...extra_args
 		};
-
-	    data.x = xdata;
-	    data.y = ydata;
 
 		return data;
 	}
@@ -114,20 +139,46 @@ class Plot extends BasePage {
 		}
 	}
 
-	/* Will return x and y data for a 3 Month rolling mean line */
-	rolling_mean (xdata, ydata, month_length=6) {
-		const ret = this.groupby_month(xdata, ydata);
-		ydata = [];
-		xdata = [];
+	/* Will return x and y data for a 3 Month rolling mean line
+	 *
+	 * Args:
+	 *		input_data: Grouped data 2D array
+	 *		first ind is x
+	 *		second ind is y grouped in obj
+	 * */
+	rolling_mean (input_data, month_length=6, pct=null) {
+		let ydata = [];
+		let xdata = [];
 
-		for (let i=month_length; i<ret[0].length; i++) {
+		for (let i=month_length; i<input_data[0].length; i++) {
 			let x = 0;
 			let y = 0;
 			let ycount = 0;
 			for (let j=i-month_length; j<i; j++) {
-				x += ret[0][j].valueOf();
-				y += ret[1][j]['sum'];
-				ycount += ret[1][j]['count'];
+				x += input_data[0][j].valueOf();
+				const ydata = input_data[1][j];
+				const xdata = input_data[0][j];
+				if (pct === null) {
+					// Handle standard rolling mean
+					y += ydata['sum'];
+					ycount += ydata['count'];
+				} else {
+					// Handle the percentiles
+					const len = ydata['y_sort_val'].length
+					if (len == 1) {
+						y += ydata['y_sort_val'][0];
+						ycount += 1;
+					} else {
+						// Linear interpolation between inds
+						const ys = ydata['y_sort_val'];
+						const ind = parseInt(pct * (len-1));
+						const grad = (ys[ind + 1] - ys[ind]);
+						const yint = (pct * grad) + ys[ind];
+
+						ycount += 1;
+						y += yint;
+					}
+				}
 			}
 			xdata.push(new Date(parseInt(x/month_length)));
 			ydata.push(y/ycount);
@@ -151,18 +202,28 @@ class Plot extends BasePage {
 			let dt = new Date(currDate.getFullYear(), currDate.getMonth()).getTime();
 			dates.add(dt);
 
-			if (!(dt in data)) { data[dt] = {'min': Infinity, 'min': null, 'sum': 0, 'mean': 0, 'count': 0}; }
+			if (!(dt in data)) {
+				data[dt] = {'min': Infinity,
+							'max': null,
+							'sum': 0,
+							'mean': 0,
+							'count': 0,
+							'y_sort_val': [],
+				};
+			}
 
 			const yval = ydata[i];
-			if (yval > data[dt]['min']) {data[dt]['min'] = yval};
-			if (yval < data[dt]['max']) {data[dt]['max'] = yval};
+			if (yval < data[dt]['min']) {data[dt]['min'] = yval};
+			if (yval > data[dt]['max']) {data[dt]['max'] = yval};
 			data[dt]['sum'] += yval;
 			data[dt]['count'] += 1;
+			data[dt]['y_sort_val'].push(yval);
 		}
 
 		// Sort out means
 		for (let i in data) {
 			data[i]['mean'] = data[i]['sum'] / data[i]['count'];
+			data[i]['y_sort_val'].sort(function (a, b) { return a - b; });
 		}
 
 		// Set the xData and yData
