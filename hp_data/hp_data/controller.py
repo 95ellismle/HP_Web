@@ -15,7 +15,8 @@ import hp_data as hpd
 import hp_data.utils as ut
 
 
-cache = dc.DataCache(list(range(2022, 1994, -1)))
+curr_year = pd.Timestamp.now().year
+cache = dc.DataCache(list(range(curr_year, 1994, -1)))
 
 
 class DataController:

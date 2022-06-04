@@ -60,7 +60,6 @@ class Plot extends BasePage {
 			const ret = this.rolling_mean(month_data, 3, 0.5);
 			for (let i=0.2; i<0.6; i += 0.1) {
 				const low = this.rolling_mean(month_data, 3, i);
-				console.log(str_pref);
 				traces.push(this.create_traces(low[0],  low[1], {fill: 'tonexty',
 																 mode: 'none',
 																 hoverinfo: 'none',
@@ -80,7 +79,6 @@ class Plot extends BasePage {
 																 fillcolor: `${str_pref}, ${1.02 - i})`
 																}
 				));
-				console.log(i);
 			}
 
 			traces.push(this.create_traces(ret[0],  ret[1],  {fill: 'tonexty',
@@ -236,36 +234,4 @@ class Plot extends BasePage {
 		return [ret_x, ret_y];
 	}
 
-	/* Parse the plotting series from the data dict */
-	get_data(key) {
-		const col_ind = this.data['columns'].indexOf(key);
-		if (col_ind == -1) {
-			throw('Bad plot dim -x');
-		}
-
-		let data = [];
-
-		// First check the type -if it's a date create a date obj
-		const first_data_item = this.data.data[0][col_ind];
-		let is_date = false;
-		if (typeof(first_data_item) !== 'number') {
-			try {
-				const tmp = new Date(first_data_item);
-				if (tmp.valueOf() === tmp.valueOf()) {
-					is_date = true;
-				}
-			} catch {}
-		}
-
-		// Loop over all items and append to array
-		for (let i=0; i<this.data.data.length; i++) {
-			if (is_date) {
-				data.push(new Date(this.data.data[i][col_ind]));
-			} else {
-				data.push(this.data.data[i][col_ind]);
-			}
-		}
-
-		return data;
-	}
 }

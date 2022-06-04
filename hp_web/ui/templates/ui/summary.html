@@ -9,6 +9,9 @@
 <script type='text/javascript' src="{% static 'js/utils.js' %}"></script>
 <script type='text/javascript' src="{% static 'js/table.js' %}"></script>
 <script type='text/javascript' src="{% static 'js/plot.js' %}"></script>
+<!--
+<script type='text/javascript' src="{% static 'js/map.js' %}"></script>
+-->
 <script src='https://cdn.plot.ly/plotly-2.9.0.min.js'></script>
 
 <link rel="stylesheet" href="{% static 'css/table.css' %}">
@@ -22,6 +25,11 @@
 		<div id='id_plot_div' style='display: none'>
 			<p id='id_plot_explain' style='margin: 0'></p>
 		</div>
+
+		<!--<div id='id_map_div' style='display: none'>
+			<p id='id_map_explain' style='margin: 0'></p>
+		</div> 
+		-->
 	</div>
 </div>
 
@@ -29,7 +37,11 @@
 //	const False=false;
 //	const True=true;
 	{% autoescape off %}
-	const input_data = {{data}};
+	{% if data %}
+		const input_data = {{data}};
+	{% else %}
+		const input_data = {};
+	{% endif %}
 	{% endautoescape %}
 
 	// Add navbar items
@@ -135,7 +147,7 @@
 	 */
 	function create_map_page(div_name, table_data) {
 		if (Object.entries(table_data).length > 0 & table_data['data'].length > 0) {
-			window.map = new Map(table_data, 'id_plot_div');
+			window.map = new Map(table_data, 'id_map_div');
 			window.map.draw();
 			window.map.show();
 		}
@@ -146,11 +158,11 @@
 	{% if data.length != 0 %}
 		table_data = decode_huffman(input_data);
 		const NE = localStorage.getItem('navbarElement') || window.navbarElement || 'table';
-		if (NE == 'table') {
-			create_table_page('content_div', table_data);
-		} else if (NE == 'plot') {
-			create_plot_page('content_div', table_data);
-		}
+		const page_func = {'table': function () {create_table_page('content_div', table_data)},
+						   'plot': function () {create_plot_page('content_div', table_data)},
+						   'map': function () {create_map_page('content_div', table_data)},
+		};
+		page_func[NE]();
 	{% endif %}
 
 	/* Will switch between the Table View and the Plot View */

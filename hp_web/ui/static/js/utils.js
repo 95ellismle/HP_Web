@@ -116,6 +116,45 @@ class BasePage {
 		const div = document.getElementById(this.root_div);
 		div.style.display = 'none';
 	}
+
+	/* Parse a column from the data dict
+	 *
+	 * Args:
+	 *		key: <str> the column to parse from the data
+	 * */
+	get_data(key) {
+		const col_ind = this.data['columns'].indexOf(key);
+		if (col_ind == -1) {
+			throw(`Bad data dimension: ${key}`);
+		}
+
+		let data = [];
+
+		// First check the type -if it's a date create a date obj
+		const first_data_item = this.data.data[0][col_ind];
+		let is_date = false;
+		if (typeof(first_data_item) !== 'number') {
+			try {
+				const tmp = new Date(first_data_item);
+				if (tmp.valueOf() === tmp.valueOf()) {
+					is_date = true;
+				}
+			} catch {}
+		}
+
+		// Loop over all items and append to array
+		for (let i=0; i<this.data.data.length; i++) {
+			if (is_date) {
+				data.push(new Date(this.data.data[i][col_ind]));
+			} else {
+				data.push(this.data.data[i][col_ind]);
+			}
+		}
+
+		return data;
+	}
+
+
 }
 
 /* Get the height of the entire document */

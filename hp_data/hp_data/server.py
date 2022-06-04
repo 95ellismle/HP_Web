@@ -68,19 +68,23 @@ def index(**selectors):
     # Create data generator
     try:
         cont = cnt.DataController(selectors, ['date_transfer', 'price', 'paon', 'street',
-                                              'city', 'county', 'postcode',])
+                                              'city', 'county', 'postcode', 'lat',
+                                              'long'])
         data = cont.read_data()
     except Exception as e:
         log.error('Exception: ', e)
         return 1
 
-    # Now actually read the data (first 10,000 lines)
+    # Now actually read the data (first 400,000 lines)
     data_len = 0
     ret_data = {}
     data_lens = {'len': 0, 'max': max_data_len}
 
     try:
+        ignore_cols = {'is_new', 'tenure'}
         for df, col_names in data:
+            print(col_names)
+            col_names = [(i, j) for i, j in col_names if i not in ignore_cols]
             ret_data = _append_to_data(df,
                                        col_names,
                                        ret_data,

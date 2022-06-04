@@ -26,7 +26,11 @@ with open(BASE_DIR / 'secret_key.key', 'r') as f:
 #SECRET_KEY = 'django-insecure-=tjxgrqm2i-f#mlh^l*l4^o(g_w7&bwpygw!efd(i3l-e*izzs'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+try:
+    from hp_web import envrc
+    DEBUG = envrc.DEBUG
+except ImportError:
+    DEBUG = False
 
 ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'what-did-they-pay.co.uk']
 
